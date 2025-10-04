@@ -4,13 +4,16 @@
       onAuthStateChanged, 
       signOut, 
       updateEmail, 
-      updatePassword 
+      updatePassword,
+      reauthenticateWithCredential,
+      EmailAuthProvider
     } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
     import { 
       getFirestore, 
       doc, 
       getDoc, 
-      updateDoc 
+      updateDoc,
+      setDoc
     } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -44,6 +47,8 @@
     const logoutModal = document.getElementById("logoutModal");
     const confirmLogout = document.getElementById("confirmLogout");
     const cancelLogout = document.getElementById("cancelLogout");
+    const loadingSpinner = document.getElementById("loadingSpinner");
+    const profileCard = document.getElementById("profileCard");
 
     /* ========== STATE ========== */
     let balance = 0;
@@ -51,6 +56,7 @@
     let cartData = [];
     let notifications = [];
     let currentUserData = {};
+    let originalUserData = {};
 
     /* ========== NOTIFICATION FUNCTIONS ========== */
     function addNotification(message, type = 'info') {
@@ -102,20 +108,24 @@
       });
     }
 
-    notificationBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      notificationDropdown.classList.toggle('show');
-      cartDropdown.classList.remove('show');
-      notifications.forEach(n => n.unread = false);
-      updateNotificationUI();
-      saveNotifications();
-    });
+    if (notificationBtn) {
+      notificationBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        notificationDropdown.classList.toggle('show');
+        if (cartDropdown) cartDropdown.classList.remove('show');
+        notifications.forEach(n => n.unread = false);
+        updateNotificationUI();
+        saveNotifications();
+      });
+    }
 
-    clearAllBtn.addEventListener('click', () => {
-      notifications = [];
-      updateNotificationUI();
-      saveNotifications();
-    });
+    if (clearAllBtn) {
+      clearAllBtn.addEventListener('click', () => {
+        notifications = [];
+        updateNotificationUI();
+        saveNotifications();
+      });
+    }
 
     async function loadNotifications() {
       if (!currentUserId) return;
@@ -146,7 +156,7 @@
 
     /* ========== CART FUNCTIONS ========== */
     function updateCartUI(cart) {
-      cartData = cart;
+      cartData = cart || [];
       cartItemsEl.innerHTML = "";
 
       if (!cart || cart.length === 0) {
@@ -156,29 +166,31 @@
       }
 
       emptyCartMsg.style.display = "none";
-      cartCountEl.textContent = cart.reduce((sum, item) => sum + item.qty, 0);
+      cartCountEl.textContent = cart.reduce((sum, item) => sum + (item.qty || 1), 0);
 
       cart.forEach(item => {
         const li = document.createElement("li");
         li.classList.add("cart-item");
         li.innerHTML = `
-          <img src="img/${item.img}" alt="${item.name}" class="cart-thumb">
+          <img src="img/${item.img || 'placeholder.png'}" alt="${item.name || 'Item'}" class="cart-thumb" onerror="this.src='img/download.png'">
           <div class="cart-info">
-            <p class="cart-name">${item.name}</p>
-            <p class="cart-qty">${item.price} pts × ${item.qty}</p>
+            <p class="cart-name">${item.name || 'Unnamed Item'}</p>
+            <p class="cart-qty">${item.price || 0} pts × ${item.qty || 1}</p>
           </div>
         `;
         cartItemsEl.appendChild(li);
       });
     }
 
-    cartBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      cartDropdown.classList.toggle("show");
-      notificationDropdown.classList.remove('show');
-    });
+    if (cartBtn) {
+      cartBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        cartDropdown.classList.toggle("show");
+        if (notificationDropdown) notificationDropdown.classList.remove('show');
+      });
+    }
 
-    /* ========== AUTH STATE ========== */
+    /* ========== PROFILE DATA LOADING ========== */
     const editBtn = document.getElementById("editBtn");
     const saveBtn = document.getElementById("saveBtn");
     const cancelBtn = document.getElementById("cancelBtn");
@@ -188,43 +200,95 @@
     const phoneInput = document.getElementById("editPhone");
     const passwordInput = document.getElementById("editPassword");
 
+    async function loadUserData(user) {
+      try {
+        loadingSpinner.classList.add('show');
+        profileCard.style.display = 'none';
+
+        const docRef = doc(db, "users", user.uid);
+        console.log("Fetching user document for:", user.uid);
+        
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          console.log("User data fetched:", data);
+          
+          currentUserData = data;
+          originalUserData = { ...data };
+          
+          // Update header
+          if (nameEl) nameEl.textContent = data.firstName || user.displayName || "User";
+          balance = data.points || 0;
+          if (pointsEl) pointsEl.textContent = `Balance Points: ${balance}`;
+          
+          // Update profile card
+          const fullName = `${data.firstName || ""} ${data.lastName || ""}`.trim() || "User Name";
+          document.getElementById("cardUserName").textContent = fullName;
+          document.getElementById("cardUserEmail").textContent = data.email || user.email || "-";
+
+          // Fill input fields
+          firstNameInput.value = data.firstName || "";
+          lastNameInput.value = data.lastName || "";
+          emailInput.value = data.email || user.email || "";
+          phoneInput.value = data.phone || "";
+          passwordInput.value = "";
+          passwordInput.placeholder = "Enter new password (leave blank to keep current)";
+
+          // Update cart and notifications
+          updateCartUI(data.cart || []);
+          await loadNotifications();
+
+          loadingSpinner.classList.remove('show');
+          profileCard.style.display = 'block';
+        } else {
+          console.warn("No user document found. Creating default document...");
+          
+          // Create default user document
+          const defaultData = {
+            email: user.email || "",
+            firstName: user.displayName || "User",
+            lastName: "",
+            phone: "",
+            points: 0,
+            cart: [],
+            notifications: [],
+            createdAt: new Date().toISOString()
+          };
+
+          await setDoc(docRef, defaultData);
+          console.log("Default user document created");
+          
+          // Reload the page to fetch the newly created document
+          window.location.reload();
+        }
+      } catch (error) {
+        console.error("Error loading user data:", error);
+        alert("Error loading profile data. Please refresh the page.");
+        loadingSpinner.classList.remove('show');
+      }
+    }
+
+    /* ========== AUTH STATE ========== */
     onAuthStateChanged(auth, async (user) => {
+      console.log("Auth state changed:", user);
+      
       if (!user) {
+        console.log("No user logged in, redirecting to signIn.html");
         window.location.href = "signIn.html";
         return;
       }
 
       currentUserId = user.uid;
-      const docRef = doc(db, "users", currentUserId);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        currentUserData = data;
-        
-        nameEl.textContent = data.firstName || user.displayName || "User";
-        balance = data.points || 0;
-        pointsEl.textContent = `Balance Points: ${balance}`;
-        
-        document.getElementById("cardUserName").textContent = 
-          `${data.firstName || ""} ${data.lastName || ""}`.trim();
-        document.getElementById("cardUserEmail").textContent = 
-          data.email || user.email || "-";
-
-        firstNameInput.value = data.firstName || "";
-        lastNameInput.value = data.lastName || "";
-        emailInput.value = data.email || user.email || "";
-        phoneInput.value = data.phone || "";
-        passwordInput.value = "******";
-
-        updateCartUI(data.cart || []);
-        loadNotifications();
-      }
+      console.log("User logged in:", currentUserId);
+      
+      await loadUserData(user);
     });
 
     /* ========== EDIT PROFILE ========== */
     if (editBtn) {
       editBtn.addEventListener("click", () => {
+        console.log("Edit button clicked");
         [firstNameInput, lastNameInput, emailInput, phoneInput, passwordInput].forEach(el => el.disabled = false);
         saveBtn.disabled = false;
         cancelBtn.disabled = false;
@@ -234,11 +298,12 @@
 
     if (cancelBtn) {
       cancelBtn.addEventListener("click", () => {
-        firstNameInput.value = currentUserData.firstName || "";
-        lastNameInput.value = currentUserData.lastName || "";
-        emailInput.value = currentUserData.email || "";
-        phoneInput.value = currentUserData.phone || "";
-        passwordInput.value = "******";
+        console.log("Cancel button clicked");
+        firstNameInput.value = originalUserData.firstName || "";
+        lastNameInput.value = originalUserData.lastName || "";
+        emailInput.value = originalUserData.email || "";
+        phoneInput.value = originalUserData.phone || "";
+        passwordInput.value = "";
 
         [firstNameInput, lastNameInput, emailInput, phoneInput, passwordInput].forEach(el => el.disabled = true);
         saveBtn.disabled = true;
@@ -249,31 +314,65 @@
 
     if (saveBtn) {
       saveBtn.addEventListener("click", async () => {
-        if (!currentUserId) return;
+        if (!currentUserId) {
+          alert("No user logged in");
+          return;
+        }
 
         try {
+          console.log("Saving profile changes...");
           const docRef = doc(db, "users", currentUserId);
 
-          await updateDoc(docRef, {
-            firstName: firstNameInput.value,
-            lastName: lastNameInput.value,
-            email: emailInput.value,
-            phone: phoneInput.value
-          });
+          // Update Firestore
+          const updateData = {
+            firstName: firstNameInput.value.trim(),
+            lastName: lastNameInput.value.trim(),
+            email: emailInput.value.trim(),
+            phone: phoneInput.value.trim()
+          };
 
-          if (auth.currentUser && emailInput.value !== currentUserData.email) {
-            await updateEmail(auth.currentUser, emailInput.value);
+          console.log("Updating Firestore with:", updateData);
+          await updateDoc(docRef, updateData);
+
+          // Update email if changed
+          if (auth.currentUser && emailInput.value.trim() !== originalUserData.email) {
+            console.log("Email changed, updating Firebase Auth...");
+            try {
+              await updateEmail(auth.currentUser, emailInput.value.trim());
+              console.log("Email updated successfully");
+            } catch (emailError) {
+              console.error("Email update error:", emailError);
+              alert("Email updated in profile but you may need to re-login to update authentication email.");
+            }
           }
 
-          if (auth.currentUser && passwordInput.value && passwordInput.value !== "******") {
-            await updatePassword(auth.currentUser, passwordInput.value);
+          // Update password if provided
+          if (auth.currentUser && passwordInput.value && passwordInput.value.trim() !== "") {
+            console.log("Password change requested");
+            if (passwordInput.value.length < 6) {
+              alert("Password must be at least 6 characters");
+              return;
+            }
+            try {
+              await updatePassword(auth.currentUser, passwordInput.value);
+              console.log("Password updated successfully");
+            } catch (pwError) {
+              console.error("Password update error:", pwError);
+              alert("Password update failed. You may need to re-login first. Error: " + pwError.message);
+              return;
+            }
           }
 
           addNotification("Profile updated successfully!", "success");
-          location.reload();
+          alert("Profile updated successfully!");
+          
+          // Reload to fetch fresh data
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
         } catch (err) {
           console.error("Error updating profile:", err);
-          alert("Failed to update profile. Try re-login to change email/password.");
+          alert("Failed to update profile: " + err.message);
         }
       });
     }
@@ -286,8 +385,8 @@
       profileToggle.addEventListener("click", (e) => {
         e.stopPropagation();
         profileEl.classList.toggle("active");
-        notificationDropdown.classList.remove('show');
-        cartDropdown.classList.remove('show');
+        if (notificationDropdown) notificationDropdown.classList.remove('show');
+        if (cartDropdown) cartDropdown.classList.remove('show');
       });
     }
 
@@ -320,6 +419,7 @@
     if (logoutBtn) {
       logoutBtn.addEventListener("click", (e) => {
         e.preventDefault();
+        e.stopPropagation();
         logoutModal.style.display = "flex";
       });
     }
@@ -328,7 +428,11 @@
       confirmLogout.addEventListener("click", () => {
         logoutModal.style.display = "none";
         signOut(auth).then(() => {
+          console.log("User signed out");
           window.location.href = "signIn.html";
+        }).catch((error) => {
+          console.error("Sign out error:", error);
+          alert("Error signing out: " + error.message);
         });
       });
     }
@@ -339,19 +443,13 @@
       });
     }
 
-    /* ========== CLOSE DROPDOWNS ========== */
-    window.addEventListener("click", (e) => {
-      if (!notificationBtn.contains(e.target)) {
-        notificationDropdown.classList.remove('show');
-      }
-      if (!cartBtn.contains(e.target)) {
-        cartDropdown.classList.remove('show');
-      }
-      if (profileEl && !profileEl.contains(e.target)) {
-        profileEl.classList.remove("active");
-      }
-      
-      document.querySelectorAll(".modal").forEach(modal => {
-        if (e.target === modal) modal.style.display = "none";
+    // Prevent form submission on Enter key
+    document.querySelectorAll('input').forEach(input => {
+      input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+        }
       });
     });
+
+    console.log("MyAccount page script loaded successfully");
