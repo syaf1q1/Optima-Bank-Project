@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Optima Bank - My Account</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="static/MyAccount.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="logo" onclick="window.location.href='landingpage.html'">
+      Optima Bank
+    </div>
+
+    <div class="header-right">
+      <div id="loggedInUserPoints" class="point-balance">Balance Points: 0</div>
+
+      <!-- Notification -->
+      <div class="notification" id="notificationBtn">
+        <img src="img/icons8-notification-96.png" alt="Bell Icon" class="bell-icon">
+        <span class="notification-badge" id="notificationBadge">0</span>
+        
+        <div class="dropdown-content" id="notificationDropdown">
+          <div class="notification-header">
+            <span>Notifications</span>
+            <button class="clear-all-btn" id="clearAllBtn">Clear All</button>
+          </div>
+          <div id="notificationList">
+            <div class="notification-empty">No new notifications</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cart Button -->
+      <div class="cart" id="cartBtn">
+        <span>Cart (<span id="cartCount">0</span>)</span>
+        <img src="img/icons8-cart-96.png" alt="Cart Icon" class="cart-icon">
+        
+        <div id="cartDropdown" class="dropdown-content">
+          <ul id="cartItems"></ul>
+          <p id="emptyCartMsg">Your cart is empty</p>
+        </div>
+      </div>
+
+      <!-- Profile -->
+      <div class="profile">
+        <div class="profile-toggle">
+          <span id="loggedInUserName">User</span>
+          <img src="img/download.png" alt="Profile" class="profile-pic">
+        </div>
+        <div class="dropdown">
+          <a href="MyAccount.html">My Account</a>
+          <a href="historyreddemed.html">History</a>
+          <a href="cart.html">My Cart</a>
+          <a href="terms.html">Terms & Conditions</a>
+          <button id="logoutBtn" class="logout-btn">Logout</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Section -->
+  <main>
+    <div class="profile-card">
+      <img src="img/download.png" alt="Profile Picture">
+      <h2 id="cardUserName">User Name</h2>
+      <p id="cardUserEmail">user@example.com</p>
+
+      <div class="profile-info">
+        <p><b>First Name:</b> <input type="text" id="editFirstName" disabled></p>
+        <p><b>Last Name:</b> <input type="text" id="editLastName" disabled></p>
+        <p><b>Email:</b> <input type="email" id="editEmail" disabled></p>
+        <p><b>Phone:</b> <input type="tel" id="editPhone" disabled></p>
+        <p><b>Password:</b> <input type="password" id="editPassword" disabled></p>
+      </div>
+
+      <div class="profile-actions">
+        <button id="editBtn">Edit Profile</button>
+        <button id="saveBtn" disabled>Save Changes</button>
+        <button id="cancelBtn" disabled>Cancel</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <a href="#">Privacy Policy</a> | 
+    <a href="#">Terms of Service</a> | 
+    <a href="#">Cookie Policy</a><br>
+    &copy; 2025 Optima Bank. All rights reserved.
+  </footer>
+
+  <!-- Logout Modal -->
+  <div id="logoutModal" class="modal">
+    <div class="modal-box">
+      <h3>Are you sure want to log out?</h3>
+      <p>You'll need to log in again to access your account</p>
+      <div class="modal-actions">
+        <button id="confirmLogout" class="btn-logout">Log Out</button>
+        <button id="cancelLogout" class="btn-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="java/MyAccount.js" type="module" defer></script>
+</body>
+</html>
