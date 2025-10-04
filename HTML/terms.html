@@ -5,7 +5,470 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Optima Bank - Terms and Conditions</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="static/terms.css">
+  <style>
+    * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #FCECF3;
+  color: #333;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #8C1A6A;
+  color: white;
+  flex-wrap: wrap;
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-weight: 500;
+  flex-wrap: wrap;
+}
+
+.point-balance {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* Notification Badge */
+.notification {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ff3b3b;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.notification-badge.show {
+  display: flex;
+}
+
+.bell-icon, .cart-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+/* Notification Dropdown */
+.notification .dropdown-content {
+  display: none;
+  position: absolute;
+  top: 120%;
+  right: 0;
+  background: #fff;
+  min-width: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+  box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+  z-index: 1000;
+  border-radius: 8px;
+}
+
+.notification .dropdown-content.show {
+  display: block;
+}
+
+.notification-header {
+  padding: 12px 15px;
+  background: #8C1A6A;
+  color: white;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 8px 8px 0 0;
+}
+
+.clear-all-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+  text-decoration: underline;
+}
+
+.notification-item {
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: background 0.2s;
+  color: #333;
+}
+
+.notification-item:hover {
+  background: #f9f9f9;
+}
+
+.notification-item.unread {
+  background: #fff5f8;
+}
+
+.notification-item div {
+  color: #333;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.notification-item .time {
+  font-size: 11px;
+  color: #888;
+  margin-top: 4px;
+}
+
+.notification-empty {
+  padding: 30px;
+  text-align: center;
+  color: #666;
+}
+
+/* Cart */
+.cart {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  color: white;
+}
+
+.cart .dropdown-content {
+  display: none;
+  position: absolute;
+  top: 120%;
+  right: 0;
+  background: #fff;
+  min-width: 280px;
+  max-height: 400px;
+  overflow-y: auto;
+  box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+  z-index: 1000;
+  padding: 0;
+  border-radius: 12px;
+}
+
+.cart .dropdown-content.show {
+  display: block;
+}
+
+#emptyCartMsg {
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+  padding: 30px 20px;
+}
+
+#cartItems {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 15px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s;
+}
+
+.cart-item:hover {
+  background: #fafafa;
+}
+
+.cart-thumb {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  flex-shrink: 0;
+}
+
+.cart-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.cart-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.3;
+}
+
+.cart-qty {
+  font-size: 13px;
+  color: #666;
+}
+
+/* Profile */
+.profile {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.profile .dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  padding: 8px 0;
+  min-width: 160px;
+  z-index: 999;
+}
+
+.profile .dropdown a,
+.profile .dropdown button {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  text-decoration: none;
+}
+
+.profile .dropdown a:hover,
+.profile .dropdown button:hover {
+  background: #FCECF3;
+}
+
+.profile.active .dropdown {
+  display: block;
+}
+
+.profile-pic {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 8px;
+}
+
+.profile-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#loggedInUserName {
+  font-weight: 600;
+  font-size: 14px;
+  color: white;
+  white-space: nowrap;
+}
+
+/* Main Content */
+.terms-container {
+  flex: 1;
+  max-width: 900px;
+  background: #fff;
+  margin: 40px auto;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.terms-container h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #8C1A6A;
+  font-size: 28px;
+}
+
+.terms-container h2 {
+  font-size: 18px;
+  color: #8C1A6A;
+  margin: 20px 0 10px;
+}
+
+.terms-container ul {
+  margin-left: 25px;
+  list-style-type: disc;
+  line-height: 1.8;
+}
+
+.terms-container li {
+  margin-bottom: 8px;
+}
+
+.terms-container p {
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.terms-container section {
+  margin-bottom: 25px;
+}
+
+/* Modal */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 25px 30px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content h3 {
+  margin-bottom: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #8C1A6A;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.confirm-btn {
+  background: #9c1c7c;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.cancel-btn {
+  background: #ddd;
+  color: #333;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.confirm-btn:hover { background: #7a145f; }
+.cancel-btn:hover { background: #bbb; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Footer */
+footer {
+  background: #9c1c7c;
+  color: white;
+  text-align: center;
+  padding: 15px;
+  font-size: 14px;
+  margin-top: auto;
+}
+
+footer a {
+  color: #fff;
+  text-decoration: none;
+  margin: 0 5px;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .terms-container {
+    padding: 25px;
+    margin: 20px;
+  }
+}
+
+@media (max-width: 576px) {
+  .header-right {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .terms-container h1 {
+    font-size: 24px;
+  }
+}
+  </style>
 </head>
 <body>
   <!-- Header -->
@@ -130,7 +593,7 @@
   <!-- Logout Modal -->
   <div id="logoutModal" class="modal">
     <div class="modal-content">
-      <h3>Are you sure want to log out ?</h3>
+      <h3>Are you sure want to log out?</h3>
       <p>You'll need to log in again to access your account</p>
       <div class="modal-actions">
         <button id="confirmLogout" class="confirm-btn">Log Out</button>
@@ -139,6 +602,292 @@
     </div>
   </div>
 
-  <script type="module" src="java/terms.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+    import { 
+      getFirestore, 
+      doc, 
+      getDoc, 
+      updateDoc,
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAdQIM_mmd2860_QxvO4_Nqfp9p1jDuFsA",
+      authDomain: "optima-bank-login-9a2ab.firebaseapp.com",
+      projectId: "optima-bank-login-9a2ab",
+      storageBucket: "optima-bank-login-9a2ab.appspot.com",
+      messagingSenderId: "114013201106",
+      appId: "1:114013201106:web:75fdcd84a9861a6769c30b",
+      measurementId: "G-P2P25G8F9W"
+    };
+
+    console.log("Initializing Firebase...");
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    /* ========== DOM ELEMENTS ========== */
+    const nameEl = document.getElementById("loggedInUserName");
+    const pointsEl = document.getElementById("loggedInUserPoints");
+    const cartBtn = document.getElementById("cartBtn");
+    const cartDropdown = document.getElementById("cartDropdown");
+    const cartItemsEl = document.getElementById("cartItems");
+    const cartCountEl = document.getElementById("cartCount");
+    const emptyCartMsg = document.getElementById("emptyCartMsg");
+    const notificationBtn = document.getElementById("notificationBtn");
+    const notificationDropdown = document.getElementById("notificationDropdown");
+    const notificationList = document.getElementById("notificationList");
+    const notificationBadge = document.getElementById("notificationBadge");
+    const clearAllBtn = document.getElementById("clearAllBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const logoutModal = document.getElementById("logoutModal");
+    const confirmLogout = document.getElementById("confirmLogout");
+    const cancelLogout = document.getElementById("cancelLogout");
+
+    /* ========== STATE ========== */
+    let balance = 0;
+    let currentUserId = null;
+    let cartData = [];
+    let notifications = [];
+
+    /* ========== NOTIFICATION FUNCTIONS ========== */
+    function updateNotificationUI() {
+      const unreadCount = notifications.filter(n => n.unread).length;
+      
+      if (unreadCount > 0) {
+        notificationBadge.textContent = unreadCount;
+        notificationBadge.classList.add('show');
+      } else {
+        notificationBadge.classList.remove('show');
+      }
+      
+      if (notifications.length === 0) {
+        notificationList.innerHTML = '<div class="notification-empty">No new notifications</div>';
+        return;
+      }
+      
+      notificationList.innerHTML = notifications.map(notif => `
+        <div class="notification-item ${notif.unread ? 'unread' : ''}" data-id="${notif.id}">
+          <div>${notif.message}</div>
+          <div class="time">${notif.time}</div>
+        </div>
+      `).join('');
+      
+      document.querySelectorAll('.notification-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const id = parseInt(item.dataset.id);
+          const notif = notifications.find(n => n.id === id);
+          if (notif) {
+            notif.unread = false;
+            updateNotificationUI();
+            saveNotifications();
+          }
+        });
+      });
+    }
+
+    if (notificationBtn) {
+      notificationBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        notificationDropdown.classList.toggle('show');
+        if (cartDropdown) cartDropdown.classList.remove('show');
+        notifications.forEach(n => n.unread = false);
+        updateNotificationUI();
+        saveNotifications();
+      });
+    }
+
+    if (clearAllBtn) {
+      clearAllBtn.addEventListener('click', () => {
+        notifications = [];
+        updateNotificationUI();
+        saveNotifications();
+      });
+    }
+
+    async function loadNotifications() {
+      if (!currentUserId) return;
+      
+      try {
+        const userRef = doc(db, "users", currentUserId);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists() && userSnap.data().notifications) {
+          notifications = userSnap.data().notifications;
+          updateNotificationUI();
+        }
+      } catch (error) {
+        console.error("Error loading notifications:", error);
+      }
+    }
+
+    async function saveNotifications() {
+      if (!currentUserId) return;
+      
+      try {
+        const userRef = doc(db, "users", currentUserId);
+        await updateDoc(userRef, { notifications: notifications });
+      } catch (error) {
+        console.error("Error saving notifications:", error);
+      }
+    }
+
+    /* ========== CART FUNCTIONS ========== */
+    function updateCartUI(cart) {
+      cartData = cart || [];
+      if (cartItemsEl) cartItemsEl.innerHTML = "";
+
+      if (!cart || cart.length === 0) {
+        if (emptyCartMsg) emptyCartMsg.style.display = "block";
+        if (cartCountEl) cartCountEl.textContent = 0;
+        return;
+      }
+
+      if (emptyCartMsg) emptyCartMsg.style.display = "none";
+      if (cartCountEl) cartCountEl.textContent = cart.reduce((sum, item) => sum + (item.qty || 1), 0);
+
+      cart.forEach(item => {
+        const li = document.createElement("li");
+        li.classList.add("cart-item");
+        li.innerHTML = `
+          <img src="img/${item.img || 'placeholder.png'}" alt="${item.name || 'Item'}" class="cart-thumb" onerror="this.src='img/download.png'">
+          <div class="cart-info">
+            <p class="cart-name">${item.name || 'Unnamed Item'}</p>
+            <p class="cart-qty">${item.price || 0} pts × ${item.qty || 1}</p>
+          </div>
+        `;
+        if (cartItemsEl) cartItemsEl.appendChild(li);
+      });
+    }
+
+    if (cartBtn) {
+      cartBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        cartDropdown.classList.toggle("show");
+        if (notificationDropdown) notificationDropdown.classList.remove('show');
+      });
+    }
+
+    /* ========== AUTH STATE ========== */
+    onAuthStateChanged(auth, async (user) => {
+      console.log("Auth state changed:", user ? `User: ${user.uid}` : "No user");
+      
+      if (!user) {
+        console.log("No user logged in, redirecting to signIn.html");
+        window.location.href = "signIn.html";
+        return;
+      }
+
+      try {
+        currentUserId = user.uid;
+        const docRef = doc(db, "users", currentUserId);
+        console.log("Fetching user data for:", currentUserId);
+        
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          console.log("User data loaded successfully:", data);
+          
+          if (nameEl) nameEl.textContent = data.firstName || user.displayName || "User";
+          balance = data.points || 0;
+          updateBalanceUI();
+          updateCartUI(data.cart || []);
+          await loadNotifications();
+        } else {
+          console.warn("No user document found, creating default...");
+          
+          // Create default user document
+          const defaultData = {
+            email: user.email || "",
+            firstName: user.displayName || "User",
+            lastName: "",
+            phone: "",
+            points: 0,
+            cart: [],
+            notifications: [],
+            createdAt: new Date().toISOString()
+          };
+
+          await setDoc(docRef, defaultData);
+          console.log("Default user document created");
+          
+          if (nameEl) nameEl.textContent = defaultData.firstName;
+          balance = 0;
+          updateBalanceUI();
+          updateCartUI([]);
+        }
+      } catch (error) {
+        console.error("Error in auth state handler:", error);
+        alert("Error loading user data: " + error.message);
+      }
+    });
+
+    function updateBalanceUI() {
+      if (pointsEl) pointsEl.textContent = `Balance Points: ${balance}`;
+    }
+
+    /* ========== PROFILE DROPDOWN ========== */
+    const profileToggle = document.querySelector(".profile-toggle");
+    const profileEl = document.querySelector(".profile");
+
+    if (profileToggle && profileEl) {
+      profileToggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        profileEl.classList.toggle("active");
+        if (notificationDropdown) notificationDropdown.classList.remove('show');
+        if (cartDropdown) cartDropdown.classList.remove('show');
+      });
+    }
+
+    /* ========== LOGOUT ========== */
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        logoutModal.style.display = "flex";
+      });
+    }
+
+    if (confirmLogout) {
+      confirmLogout.addEventListener("click", () => {
+        logoutModal.style.display = "none";
+        signOut(auth).then(() => {
+          console.log("User signed out successfully");
+          window.location.href = "signIn.html";
+        }).catch((error) => {
+          console.error("Sign out error:", error);
+          alert("Error signing out: " + error.message);
+        });
+      });
+    }
+
+    if (cancelLogout) {
+      cancelLogout.addEventListener("click", () => {
+        logoutModal.style.display = "none";
+      });
+    }
+
+    /* ========== CLOSE DROPDOWNS ========== */
+    window.addEventListener("click", (e) => {
+      if (notificationBtn && !notificationBtn.contains(e.target)) {
+        notificationDropdown.classList.remove('show');
+      }
+      if (cartBtn && !cartBtn.contains(e.target)) {
+        cartDropdown.classList.remove('show');
+      }
+      if (profileEl && !profileEl.contains(e.target)) {
+        profileEl.classList.remove("active");
+      }
+      
+      document.querySelectorAll(".modal").forEach(modal => {
+        if (e.target === modal) modal.style.display = "none";
+      });
+    });
+
+    console.log("Terms page script loaded successfully");
+  </script>
 </body>
 </html>
