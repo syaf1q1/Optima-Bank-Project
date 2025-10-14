@@ -37,7 +37,7 @@ header {
   color: #fff; 
 }
 .logo { font-size: 20px; font-weight: 700; cursor: pointer; }
-.header-right { display: flex; align-items: center; gap: 25px; flex-wrap: wrap; }
+.header-right { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
 .cart, .profile, .notification { 
   position: relative;
   display: flex; 
@@ -47,7 +47,7 @@ header {
 }
 .icon { width: 22px; height: 22px; }
 .profile-pic { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
-.points { font-weight: 600; }
+.points { font-weight: 600; font-size: 14px; white-space: nowrap; }
 
 /* Notification Badge */
 .notification-badge {
@@ -498,9 +498,10 @@ footer a:hover { text-decoration: underline; }
   }
 
   .points {
-    font-size: 11px;
+    font-size: 13px;
     white-space: nowrap;
     order: 1;
+    font-weight: 600;
   }
 
   .notification {
@@ -669,7 +670,7 @@ footer a:hover { text-decoration: underline; }
       </div>
 
       <div class="header-right">
-        <span id="loggedInUserPoints">Balance Points: 0</span>
+        <span id="loggedInUserPoints" class="points">Balance Points: 0</span>
 
         <!-- Notification -->
         <div class="notification" id="notificationBtn">
@@ -893,7 +894,7 @@ Expires: ${voucherData.expires}
 
       if (imageDataURL) {
         try {
-          doc.addImage(imageDataURL, 'JPEG', 20, 55, 80, 60);
+          doc.addImage(imageDataURL, 'JPEG', 160, 55, 30, 30);
         } catch (imgErr) {
           console.error('Error adding image to PDF:', imgErr);
           this.drawImagePlaceholder(doc, lightGray, textColor);
@@ -1300,7 +1301,7 @@ function updateBalanceUI() {
   pointsEl.textContent = `Balance Points: ${balance}`;
 }
 
-/* LOAD VOUCHER - THIS IS THE FIXED SECTION */
+/* LOAD VOUCHER */
 const urlParams = new URLSearchParams(window.location.search);
 const voucherId = urlParams.get("id");
 
@@ -1344,7 +1345,6 @@ async function loadVoucher() {
         </div>
       `;
 
-      // FIXED IMAGE LOADING CODE
       const imageUrl = voucher.imageURL || voucher.image || '';
       console.log("Image URL from database:", imageUrl);
       
