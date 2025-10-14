@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Optima Bank - Terms and Conditions</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #FCECF3;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      background: #9c1c7c;
+      color: white;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .point-balance {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    /* Notification Badge */
+    .notification {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #ff3b3b;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .notification-badge.show {
+      display: flex;
+    }
+
+    .bell-icon, .cart-icon {
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
+      filter: brightness(0) invert(1);
+    }
+
+    /* Notification Dropdown - Desktop style centered */
+    .notification .dropdown-content {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 50%;
+      transform: translateX(50%);
+      background: #fff;
+      min-width: 320px;
+      max-height: 400px;
+      overflow-y: auto;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+      z-index: 1001;
+      border-radius: 8px;
+    }
+
+    .notification .dropdown-content.show {
+      display: block;
+    }
+
+    .notification-header {
+      padding: 12px 15px;
+      background: #8C1A6A;
+      color: white;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .clear-all-btn {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      font-size: 12px;
+      text-decoration: underline;
+    }
+
+    .notification-item {
+      padding: 12px 15px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      transition: background 0.2s;
+      color: #333;
+      background: #fff;
+    }
+
+    .notification-item:hover {
+      background: #f9f9f9;
+    }
+
+    .notification-item.unread {
+      background: #fff5f8;
+    }
+
+    .notification-item div {
+      color: #333;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .notification-item .time {
+      font-size: 11px;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    .notification-empty {
+      padding: 30px;
+      text-align: center;
+      color: #666;
+      background: #fff;
+    }
+
+    /* Cart */
+    .cart {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      color: white;
+    }
+
+    .cart span {
+      font-size: 14px;
+      color: white;
+    }
+
+    /* Cart Dropdown - Desktop style like profile */
+    .cart .dropdown-content {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: #fff;
+      min-width: 300px;
+      max-height: 400px;
+      overflow-y: auto;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+      z-index: 1000;
+      padding: 0;
+      border-radius: 8px;
+    }
+
+    .cart .dropdown-content.show {
+      display: block;
+    }
+
+    #emptyCartMsg {
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+      padding: 30px 20px;
+    }
+
+    #cartItems {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .cart-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 15px;
+      border-bottom: 1px solid #f0f0f0;
+      transition: background 0.2s;
+    }
+
+    .cart-item:hover {
+      background: #fafafa;
+    }
+
+    .cart-thumb {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid #eee;
+      flex-shrink: 0;
+    }
+
+    .cart-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .cart-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: #333;
+      line-height: 1.3;
+    }
+
+    .cart-qty {
+      font-size: 13px;
+      color: #666;
+    }
+
+    /* Profile Dropdown */
+    .profile {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .profile .dropdown {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+      padding: 8px 0;
+      min-width: 160px;
+      z-index: 999;
+    }
+
+    .profile .dropdown a,
+    .profile .dropdown button {
+      display: block;
+      width: 100%;
+      padding: 10px 14px;
+      text-align: left;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      color: #333;
+      text-decoration: none;
+    }
+
+    .profile .dropdown a:hover,
+    .profile .dropdown button:hover {
+      background: #f0f0f0;
+    }
+
+    .profile.active .dropdown {
+      display: block;
+    }
+
+    .profile-pic {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 8px;
+    }
+
+    .profile-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #loggedInUserName {
+      font-weight: 600;
+      font-size: 14px;
+      color: white;
+      white-space: nowrap;
+    }
+
+    /* Main Content */
+    .terms-container {
+      flex: 1;
+      max-width: 900px;
+      background: #fff;
+      margin: 40px auto;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: calc(100% - 40px);
+    }
+
+    .terms-container h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #8C1A6A;
+      font-size: 28px;
+    }
+
+    .terms-container h2 {
+      font-size: 18px;
+      color: #8C1A6A;
+      margin: 20px 0 10px;
+    }
+
+    .terms-container ul {
+      margin-left: 25px;
+      list-style-type: disc;
+      line-height: 1.8;
+    }
+
+    .terms-container li {
+      margin-bottom: 8px;
+    }
+
+    .terms-container p {
+      margin-top: 10px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .terms-container section {
+      margin-bottom: 25px;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: #fff;
+      padding: 25px 30px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal-content h3 {
+      margin-bottom: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #8C1A6A;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 15px;
+    }
+
+    .confirm-btn {
+      background: #9c1c7c;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .cancel-btn {
+      background: #ddd;
+      color: #333;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .confirm-btn:hover { background: #7a145f; }
+    .cancel-btn:hover { background: #bbb; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Footer */
+    footer {
+      margin-top: auto;
+      background: #9c1c7c;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      font-size: 14px;
+    }
+
+    footer a {
+      color: #fff;
+      text-decoration: none;
+      margin: 0 5px;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* ============================================
+       RESPONSIVE MEDIA QUERIES
+       ============================================ */
+
+    @media (max-width: 768px) {
+      .terms-container {
+        padding: 25px;
+        margin: 20px;
+        width: calc(100% - 40px);
+      }
+    }
+
+    @media (max-width: 576px) {
+      header {
+        padding: 8px 12px;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .logo {
+        font-size: 16px;
+        text-align: center;
+        flex: 1;
+      }
+
+      .header-right {
+        gap: 8px;
+        flex-wrap: nowrap;
+        width: 100%;
+        justify-content: space-between;
+        order: 2;
+      }
+
+      .point-balance {
+        font-size: 11px;
+        white-space: nowrap;
+        order: 1;
+      }
+
+      .notification {
+        order: 2;
+      }
+
+      .cart {
+        order: 3;
+      }
+
+      .cart span {
+        font-size: 11px;
+      }
+
+      .profile {
+        order: 4;
+      }
+
+      #loggedInUserName {
+        display: none;
+      }
+
+      .profile-pic {
+        width: 26px;
+        height: 26px;
+        margin-right: 0;
+      }
+
+      .cart-icon, .bell-icon {
+        width: 20px;
+        height: 20px;
+      }
+
+      /* Notification dropdown - mobile positioning like profile */
+      .notification .dropdown-content {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 50%;
+        transform: translateX(50%);
+        left: auto;
+        min-width: 280px;
+        max-width: calc(100vw - 20px);
+        max-height: 60vh;
+      }
+
+      .notification-header {
+        padding: 10px 12px;
+        font-size: 13px;
+      }
+
+      .clear-all-btn {
+        font-size: 11px;
+      }
+
+      .notification-item {
+        padding: 10px 12px;
+      }
+
+      .notification-item div {
+        font-size: 12px;
+      }
+
+      .notification-item .time {
+        font-size: 10px;
+      }
+
+      .notification-empty {
+        padding: 20px;
+        font-size: 13px;
+      }
+
+      /* Cart dropdown - mobile positioning like profile */
+      .cart .dropdown-content {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        left: auto;
+        min-width: 260px;
+        max-width: calc(100vw - 20px);
+        max-height: 70vh;
+      }
+
+      .cart-item {
+        padding: 10px 12px;
+      }
+
+      .cart-thumb {
+        width: 45px;
+        height: 45px;
+      }
+
+      .cart-name {
+        font-size: 13px;
+      }
+
+      .cart-qty {
+        font-size: 12px;
+      }
+
+      #emptyCartMsg {
+        font-size: 13px;
+        padding: 25px 15px;
+      }
+
+      .terms-container {
+        padding: 20px 16px;
+        margin: 16px;
+        width: calc(100% - 32px);
+      }
+
+      .terms-container h1 {
+        font-size: 22px;
+      }
+
+      .terms-container h2 {
+        font-size: 16px;
+      }
+
+      .terms-container p,
+      .terms-container li {
+        font-size: 13px;
+      }
+
+      footer {
+        font-size: 12px;
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="logo" onclick="window.location.href='landingpage.html'">
+      Optima Bank
+    </div>
+
+    <div class="header-right">
+      <div id="loggedInUserPoints" class="point-balance">Balance Points: 0</div>
+
+      <!-- Notification -->
+      <div class="notification" id="notificationBtn">
+        <img src="img/icons8-notification-96.png" alt="Bell Icon" class="bell-icon">
+        <span class="notification-badge" id="notificationBadge">0</span>
+        
+        <div class="dropdown-content" id="notificationDropdown">
+          <div class="notification-header">
+            <span>Notifications</span>
+            <button class="clear-all-btn" id="clearAllBtn">Clear All</button>
+          </div>
+          <div id="notificationList">
+            <div class="notification-empty">No new notifications</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cart Button -->
+      <div class="cart" id="cartBtn">
+        <span>Cart (<span id="cartCount">0</span>)</span>
+        <img src="img/icons8-cart-96.png" alt="Cart Icon" class="cart-icon">
+        
+        <div id="cartDropdown" class="dropdown-content">
+          <ul id="cartItems"></ul>
+          <p id="emptyCartMsg">Your cart is empty</p>
+        </div>
+      </div>
+
+      <!-- Profile -->
+      <div class="profile">
+        <div class="profile-toggle">
+          <span id="loggedInUserName">User</span>
+          <img src="img/download.png" alt="Profile" class="profile-pic">
+        </div>
+        <div class="dropdown">
+          <a href="MyAccount.html">My Account</a>
+          <a href="historyreddemed.html">History</a>
+          <a href="cart.html">My Cart</a>
+          <a href="terms.html">Terms & Conditions</a>
+          <button id="logoutBtn" class="logout-btn">Logout</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="terms-container">
+    <h1>Terms and Conditions</h1>
+
+    <section>
+      <h2>1. Eligibility</h2>
+      <ul>
+        <li>Vouchers are redeemable only by Optima Bank customers with sufficient reward points.</li>
+        <li>Redemption is subject to product availability and stock levels.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>2. Redemption Requirements</h2>
+      <ul>
+        <li>Adidas Ultra Boost – 1000 Points</li>
+        <li>Adidas Unisex Shoe – 750 Points</li>
+        <li>Nike Vaporfly 3 – 2500 Points</li>
+        <li>iTunes Gift Card RM50 – 500 Points</li>
+        <li>Starbucks Prepaid RM10 – 250 Points</li>
+      </ul>
+      <p>* Upon redemption, points will be deducted immediately from your account.</p>
+    </section>
+
+    <section>
+      <h2>3. Product Information</h2>
+      <ul>
+        <li>All products are 100% authentic from their respective brands.</li>
+        <li>Colors and sizes are subject to stock availability and may vary slightly.</li>
+        <li>Design and color are available on a first-come, first-served basis and cannot be guaranteed.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>4. Delivery & Collection</h2>
+      <ul>
+        <li>Delivery timelines may vary depending on stock status.</li>
+        <li>Optima Bank is not responsible for delays arising from third-party logistics issues.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>5. Product Returns</h2>
+      <ul>
+        <li>Vouchers cannot be refunded, returned, or exchanged once redeemed.</li>
+        <li>Only defective or wrong items may be replaced, subject to stock availability, within 7 days of receipt.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>6. General</h2>
+      <ul>
+        <li>Optima Bank reserves the right to amend these Terms and Conditions at any time without prior notice.</li>
+        <li>By redeeming any vouchers, the customer agrees to these Terms and Conditions.</li>
+      </ul>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <a href="#">Privacy Policy</a> |
+    <a href="#">Terms of Service</a> |
+    <a href="#">Cookie Policy</a>
+    <p>&copy; 2025 Optima Bank. All rights reserved.</p>
+  </footer>
+
+  <!-- Logout Modal -->
+  <div id="logoutModal" class="modal">
+    <div class="modal-content">
+      <h3>Are you sure want to log out ?</h3>
+      <p>You'll need to log in again to access your account</p>
+      <div class="modal-actions">
+        <button id="confirmLogout" class="confirm-btn">Log Out</button>
+        <button id="cancelLogout" class="cancel-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+import { 
+  getFirestore, 
+  doc, 
+  getDoc, 
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAdQIM_mmd2860_QxvO4_Nqfp9p1jDuFsA",
+  authDomain: "optima-bank-login-9a2ab.firebaseapp.com",
+  projectId: "optima-bank-login-9a2ab",
+  storageBucket: "optima-bank-login-9a2ab.appspot.com",
+  messagingSenderId: "114013201106",
+  appId: "1:114013201106:web:75fdcd84a9861a6769c30b",
+  measurementId: "G-P2P25G8F9W"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* ========== DOM ELEMENTS ========== */
+const nameEl = document.getElementById("loggedInUserName");
+const pointsEl = document.getElementById("loggedInUserPoints");
+const cartBtn = document.getElementById("cartBtn");
+const cartDropdown = document.getElementById("cartDropdown");
+const cartItemsEl = document.getElementById("cartItems");
+const cartCountEl = document.getElementById("cartCount");
+const emptyCartMsg = document.getElementById("emptyCartMsg");
+const notificationBtn = document.getElementById("notificationBtn");
+const notificationDropdown = document.getElementById("notificationDropdown");
+const notificationList = document.getElementById("notificationList");
+const notificationBadge = document.getElementById("notificationBadge");
+const clearAllBtn = document.getElementById("clearAllBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const logoutModal = document.getElementById("logoutModal");
+const confirmLogout = document.getElementById("confirmLogout");
+const cancelLogout = document.getElementById("cancelLogout");
+
+/* ========== STATE ========== */
+let balance = 0;
+let currentUserId = null;
+let cartData = [];
+let notifications = [];
+
+/* ========== NOTIFICATION FUNCTIONS ========== */
+function addNotification(message, type = 'info') {
+  const notification = {
+    id: Date.now(),
+    message: message,
+    type: type,
+    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+    unread: true
+  };
+  
+  notifications.unshift(notification);
+  updateNotificationUI();
+  saveNotifications();
+}
+
+function updateNotificationUI() {
+  const unreadCount = notifications.filter(n => n.unread).length;
+  
+  if (unreadCount > 0) {
+    notificationBadge.textContent = unreadCount;
+    notificationBadge.classList.add('show');
+  } else {
+    notificationBadge.classList.remove('show');
+  }
+  
+  if (notifications.length === 0) {
+    notificationList.innerHTML = '<div class="notification-empty">No new notifications</div>';
+    return;
+  }
+  
+  notificationList.innerHTML = notifications.map(notif => `
+    <div class="notification-item ${notif.unread ? 'unread' : ''}" data-id="${notif.id}">
+      <div>${notif.message}</div>
+      <div class="time">${notif.time}</div>
+    </div>
+  `).join('');
+  
+  document.querySelectorAll('.notification-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const id = parseInt(item.dataset.id);
+      const notif = notifications.find(n => n.id === id);
+      if (notif) {
+        notif.unread = false;
+        updateNotificationUI();
+        saveNotifications();
+      }
+    });
+  });
+}
+
+notificationBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  notificationDropdown.classList.toggle('show');
+  cartDropdown.classList.remove('show');
+  document.querySelector('.profile').classList.remove('active');
+  
+  notifications.forEach(n => n.unread = false);
+  updateNotificationUI();
+  saveNotifications();
+});
+
+clearAllBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  notifications = [];
+  updateNotificationUI();
+  saveNotifications();
+});
+
+async function loadNotifications() {
+  if (!currentUserId) return;
+  
+  try {
+    const userRef = doc(db, "users", currentUserId);
+    const userSnap = await getDoc(userRef);
+    
+    if (userSnap.exists() && userSnap.data().notifications) {
+      notifications = userSnap.data().notifications;
+      updateNotificationUI();
+    }
+  } catch (error) {
+    console.error("Error loading notifications:", error);
+  }
+}
+
+async function saveNotifications() {
+  if (!currentUserId) return;
+  
+  try {
+    const userRef = doc(db, "users", currentUserId);
+    await updateDoc(userRef, { notifications: notifications });
+  } catch (error) {
+    console.error("Error saving notifications:", error);
+  }
+}
+
+/* ========== CART FUNCTIONS ========== */
+function updateCartUI(cart) {
+  cartData = cart;
+  cartItemsEl.innerHTML = "";
+
+  if (!cart || cart.length === 0) {
+    emptyCartMsg.style.display = "block";
+    cartCountEl.textContent = 0;
+    return;
+  }
+
+  emptyCartMsg.style.display = "none";
+  cartCountEl.textContent = cart.reduce((sum, item) => sum + item.qty, 0);
+
+  cart.forEach(item => {
+    const li = document.createElement("li");
+    li.classList.add("cart-item");
+    li.innerHTML = `
+      <img src="img/${item.img}" alt="${item.name}" class="cart-thumb">
+      <div class="cart-info">
+        <p class="cart-name">${item.name}</p>
+        <p class="cart-qty">${item.price} pts × ${item.qty}</p>
+      </div>
+    `;
+    cartItemsEl.appendChild(li);
+  });
+}
+
+cartBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  cartDropdown.classList.toggle("show");
+  notificationDropdown.classList.remove('show');
+  document.querySelector('.profile').classList.remove('active');
+});
+
+/* ========== AUTH STATE ========== */
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "signIn.html";
+    return;
+  }
+
+  currentUserId = user.uid;
+  const docRef = doc(db, "users", currentUserId);
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    nameEl.textContent = data.firstName || user.displayName || "User";
+    balance = data.points || 0;
+    updateBalanceUI();
+    updateCartUI(data.cart || []);
+    loadNotifications();
+  }
+});
+
+function updateBalanceUI() {
+  pointsEl.textContent = `Balance Points: ${balance}`;
+}
+
+/* ========== PROFILE DROPDOWN ========== */
+const profileToggle = document.querySelector(".profile-toggle");
+const profileEl = document.querySelector(".profile");
+
+if (profileToggle && profileEl) {
+  profileToggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    profileEl.classList.toggle("active");
+    notificationDropdown.classList.remove('show');
+    cartDropdown.classList.remove('show');
+  });
+}
+
+/* ========== LOGOUT ========== */
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    logoutModal.style.display = "flex";
+  });
+}
+
+if (confirmLogout) {
+  confirmLogout.addEventListener("click", () => {
+    logoutModal.style.display = "none";
+    signOut(auth).then(() => {
+      window.location.href = "signIn.html";
+    });
+  });
+}
+
+if (cancelLogout) {
+  cancelLogout.addEventListener("click", () => {
+    logoutModal.style.display = "none";
+  });
+}
+
+/* ========== CLOSE DROPDOWNS ========== */
+window.addEventListener("click", (e) => {
+  if (!notificationBtn.contains(e.target)) {
+    notificationDropdown.classList.remove('show');
+  }
+  if (!cartBtn.contains(e.target)) {
+    cartDropdown.classList.remove('show');
+  }
+  if (profileEl && !profileEl.contains(e.target)) {
+    profileEl.classList.remove("active");
+  }
+  
+  if (e.target === logoutModal) {
+    logoutModal.style.display = "none";
+  }
+});
+  </script>
+</body>
+</html>

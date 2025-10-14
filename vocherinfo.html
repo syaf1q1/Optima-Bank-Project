@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Optima Bank - Voucher Info</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body, html { height: 100%; }
+
+body { 
+  font-family: 'Inter', sans-serif; 
+  background: #FCECF3; 
+  color: #333;
+}
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
+}
+
+/* Header */
+header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  padding: 15px 40px; 
+  background: #8C1A6A; 
+  color: #fff; 
+}
+.logo { font-size: 20px; font-weight: 700; cursor: pointer; }
+.header-right { display: flex; align-items: center; gap: 25px; flex-wrap: wrap; }
+.cart, .profile, .notification { 
+  position: relative;
+  display: flex; 
+  align-items: center; 
+  gap: 6px; 
+  cursor: pointer; 
+}
+.icon { width: 22px; height: 22px; }
+.profile-pic { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+.points { font-weight: 600; }
+
+/* Notification Badge */
+.notification-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ff3b3b;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.notification-badge.show {
+  display: flex;
+}
+
+.bell-icon, .cart-icon { 
+  width: 22px; 
+  height: 22px; 
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+/* Notification Dropdown */
+.notification .dropdown-content {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 50%;
+  transform: translateX(50%);
+  background: #fff;
+  min-width: 320px;
+  max-height: 400px;
+  overflow-y: auto;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  z-index: 1001;
+  border-radius: 8px;
+}
+
+.notification .dropdown-content.show {
+  display: block;
+}
+
+.notification-header {
+  padding: 12px 15px;
+  background: #8C1A6A;
+  color: white;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 8px 8px 0 0;
+}
+
+.clear-all-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+  text-decoration: underline;
+}
+
+.notification-item {
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: background 0.2s;
+  color: #333;
+  background: #fff;
+}
+
+.notification-item:hover {
+  background: #f9f9f9;
+}
+
+.notification-item.unread {
+  background: #fff5f8;
+}
+
+.notification-item div {
+  color: #333;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.notification-item .time {
+  font-size: 11px;
+  color: #888;
+  margin-top: 4px;
+}
+
+.notification-empty {
+  padding: 30px;
+  text-align: center;
+  color: #666;
+  background: #fff;
+}
+
+/* Profile Dropdown */
+.profile .dropdown-content {
+  display: none;
+  width: 180px;
+  overflow: hidden;
+  flex-direction: column;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #fff;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  z-index: 1000;
+  padding: 0;
+}
+
+.profile .dropdown-content a,
+.profile .dropdown-content button {
+  display: block;
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 14px;
+  color: #333;
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-decoration: none;
+}
+
+.profile .dropdown-content a:hover,
+.profile .dropdown-content button:hover {
+  background: #f4f4f4;
+}
+
+.profile.active .dropdown-content {
+  display: flex;
+}
+
+.profile-toggle { 
+  display: flex; 
+  align-items: center; 
+  gap: 6px; 
+  cursor: pointer; 
+}
+
+#loggedInUserName { 
+  line-height: 1; 
+  font-weight: 600; 
+  color: #fff; 
+}
+
+/* Cart */
+.cart {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  color: white;
+}
+
+.cart .dropdown-content {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #fff;
+  min-width: 280px;
+  max-height: 400px;
+  overflow-y: auto;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  z-index: 1000;
+  padding: 0;
+  border-radius: 12px;
+}
+
+.cart .dropdown-content.show {
+  display: block;
+}
+
+#emptyCartMsg {
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+  padding: 30px 20px;
+}
+
+#cartItems {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 15px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s;
+}
+
+.cart-item:hover {
+  background: #fafafa;
+}
+
+.cart-item:last-child {
+  border-bottom: none;
+}
+
+.cart-thumb {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  flex-shrink: 0;
+}
+
+.cart-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.cart-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.3;
+}
+
+.cart-qty {
+  font-size: 13px;
+  color: #666;
+}
+
+/* Modal */
+.modal { 
+  display: none; 
+  position: fixed; 
+  z-index: 1000; 
+  inset: 0; 
+  background-color: rgba(0,0,0,0.5); 
+  align-items: center;
+  justify-content: center;
+}
+.modal-content {
+  background: #fff;
+  padding: 20px 30px;
+  border-radius: 12px;
+  width: 320px;
+  text-align: center;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+  color: #333;
+  animation: popin 0.3s ease;
+  position: relative;
+}
+.modal-content.error { background: #ff3b3b; color: #fff; }
+.modal-content.success { background: #28a745; color: #fff; }
+.close { 
+  position: absolute; 
+  right: 10px; 
+  top: 8px; 
+  font-size: 20px; 
+  font-weight: bold; 
+  cursor: pointer; 
+}
+
+@keyframes popin { 
+  from { transform: scale(0.8); opacity: 0; } 
+  to { transform: scale(1); opacity: 1; } 
+}
+
+.modal-actions { display: flex; justify-content: center; gap: 12px; }
+.confirm-btn { 
+  background: #9c1c7c; 
+  color: #fff; 
+  border: none; 
+  padding: 8px 16px; 
+  border-radius: 8px; 
+  cursor: pointer; 
+  font-weight: 600; 
+}
+.cancel-btn { 
+  background: #ddd; 
+  color: #333; 
+  border: none; 
+  padding: 8px 16px; 
+  border-radius: 8px; 
+  cursor: pointer; 
+  font-weight: 600; 
+}
+.confirm-btn:hover { background: #7a145f; }
+.cancel-btn:hover { background: #bbb; }
+
+/* Voucher Layout */
+.voucher-container {
+  max-width: 1100px; 
+  margin: 40px auto; 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 20px;
+  background: #fff; 
+  border-radius: 12px; 
+  box-shadow: 0 6px 16px rgba(0,0,0,0.1); 
+  overflow: hidden;
+}
+.voucher-details { padding: 25px; }
+.voucher-details h2 { margin: 0 0 15px 0; font-size: 22px; }
+.voucher-details p { font-size: 14px; line-height: 1.6; margin-bottom: 15px; }
+ul { margin: 0 0 15px 20px; font-size: 14px; }
+ul li { margin-bottom: 6px; }
+.points-text { 
+  font-size: 26px; 
+  font-weight: bold; 
+  color: #8C1A6A; 
+  margin-bottom: 15px; 
+}
+.terms { font-size: 13px; margin-bottom: 20px; }
+.buttons { display: flex; gap: 10px; }
+.btn { 
+  flex: 1; 
+  padding: 12px; 
+  border: none; 
+  cursor: pointer; 
+  border-radius: 8px; 
+  font-weight: bold; 
+}
+.btn-redeem { background: #5C4033; color: #fff; }
+.btn-cart { background: #8C1A6A; color: #fff; }
+.btn:disabled { background: #ccc !important; cursor: not-allowed; }
+.voucher-img { 
+  position: relative; 
+  background: #f5f5f5; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+}
+.voucher-img img { 
+  width: 100%; 
+  height: 100%; 
+  object-fit: cover; 
+  display: block;
+}
+
+/* Cart Popup Modal */
+.modal-content.cart-popup {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  max-width: 360px;
+  width: 90%;
+  position: relative;
+  animation: fadeIn 0.3s ease;
+}
+.modal-content.cart-popup h3 {
+  margin-bottom: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #8C1A6A;
+}
+.popup-img {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+.popup-price {
+  font-weight: bold;
+  font-size: 16px;
+  color: #444;
+}
+.popup-qty {
+  margin: 8px 0;
+  font-size: 14px;
+}
+.popup-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Footer */
+footer {
+  background: #9c1c7c;
+  color: white;
+  text-align: center;
+  padding: 15px;
+  font-size: 14px;
+}
+footer a { 
+  color: #fff; 
+  text-decoration: none; 
+  margin: 0 5px; 
+}
+footer a:hover { text-decoration: underline; }
+
+/* RESPONSIVE */
+@media (max-width: 900px) { 
+  .voucher-container { 
+    grid-template-columns: 1fr;
+    margin: 30px 15px;
+  }
+  header { padding: 15px 20px; }
+  .header-right { gap: 15px; }
+}
+
+@media (max-width: 576px) {
+  header {
+    padding: 8px 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-start;
+  }
+
+  .logo {
+    font-size: 16px;
+    width: 100%;
+    text-align: center;
+    order: 1;
+  }
+
+  .header-right {
+    gap: 8px;
+    flex-wrap: nowrap;
+    width: 100%;
+    justify-content: space-between;
+    order: 2;
+  }
+
+  .points {
+    font-size: 11px;
+    white-space: nowrap;
+    order: 1;
+  }
+
+  .notification {
+    order: 2;
+  }
+
+  .cart {
+    order: 3;
+  }
+
+  .cart span {
+    font-size: 11px;
+  }
+
+  .profile {
+    order: 4;
+    font-size: 12px;
+  }
+
+  #loggedInUserName {
+    display: none;
+  }
+
+  .profile-pic {
+    width: 26px;
+    height: 26px;
+  }
+
+  .cart-icon, .bell-icon, .icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .notification .dropdown-content {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 50%;
+    transform: translateX(50%);
+    left: auto;
+    min-width: 280px;
+    max-width: calc(100vw - 20px);
+    max-height: 60vh;
+  }
+
+  .notification-header {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .clear-all-btn {
+    font-size: 11px;
+  }
+
+  .notification-item {
+    padding: 10px 12px;
+  }
+
+  .notification-item div {
+    font-size: 12px;
+  }
+
+  .notification-item .time {
+    font-size: 10px;
+  }
+
+  .notification-empty {
+    padding: 20px;
+    font-size: 13px;
+  }
+
+  .cart .dropdown-content {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    left: auto;
+    min-width: 260px;
+    max-width: calc(100vw - 20px);
+    max-height: 70vh;
+  }
+
+  .cart-item {
+    padding: 10px 12px;
+  }
+
+  .cart-thumb {
+    width: 45px;
+    height: 45px;
+  }
+
+  .cart-name {
+    font-size: 13px;
+  }
+
+  .cart-qty {
+    font-size: 12px;
+  }
+
+  #emptyCartMsg {
+    font-size: 13px;
+    padding: 25px 15px;
+  }
+
+  .profile .dropdown-content {
+    min-width: 150px;
+  }
+
+  .profile .dropdown-content a,
+  .profile .dropdown-content button {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .voucher-container {
+    margin: 20px 10px;
+  }
+
+  .voucher-details {
+    padding: 20px 15px;
+  }
+
+  .voucher-details h2 {
+    font-size: 18px;
+  }
+
+  .points-text {
+    font-size: 22px;
+  }
+
+  .buttons {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .modal-content {
+    width: 90%;
+    max-width: 300px;
+    padding: 20px;
+  }
+
+  .modal-content.cart-popup {
+    max-width: 320px;
+  }
+
+  .popup-img {
+    width: 120px;
+    height: 120px;
+  }
+
+  footer {
+    font-size: 12px;
+    padding: 12px;
+  }
+}
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+
+    <!-- Header -->
+    <header>
+      <div class="logo" onclick="window.location.href='landingpage.html'">
+        Optima Bank
+      </div>
+
+      <div class="header-right">
+        <span id="loggedInUserPoints">Balance Points: 0</span>
+
+        <!-- Notification -->
+        <div class="notification" id="notificationBtn">
+          <img src="img/icons8-notification-96.png" alt="Bell Icon" class="bell-icon">
+          <span class="notification-badge" id="notificationBadge">0</span>
+          
+          <div class="dropdown-content" id="notificationDropdown">
+            <div class="notification-header">
+              <span>Notifications</span>
+              <button class="clear-all-btn" id="clearAllBtn">Clear All</button>
+            </div>
+            <div id="notificationList">
+              <div class="notification-empty">No new notifications</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cart Button -->
+        <div class="cart" id="cartBtn">
+          <span>Cart (<span id="cartCount">0</span>)</span>
+          <img src="img/icons8-cart-96.png" alt="Cart Icon" class="cart-icon">
+          
+          <div id="cartDropdown" class="dropdown-content">
+            <ul id="cartItems"></ul>
+            <p id="emptyCartMsg">Your cart is empty</p>
+          </div>
+        </div>
+
+        <!-- Profile -->
+        <div class="profile">
+          <div class="profile-toggle">
+            <span id="loggedInUserName">User</span>
+            <img src="img/download.png" alt="Profile" class="profile-pic">
+          </div>
+          <div class="dropdown-content">
+            <a href="MyAccount.html">My Account</a>
+            <a href="historyreddemed.html">History</a>
+            <a href="cart.html">My Cart</a>
+            <a href="terms.html">Terms & Conditions</a>
+            <button id="logoutBtn" class="logout-btn">Logout</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+      <section class="voucher-container">
+        <div class="voucher-details" id="voucherDetails">
+          <p>Loading voucher info...</p>
+        </div>
+        <div class="voucher-img">
+          <img id="voucherImg" src="" alt="Voucher Image">
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <a href="#">Privacy policy</a> |
+      <a href="#">Terms of Service</a> |
+      <a href="#">Cookie Policy</a><br>
+      &copy; 2025 Optima Bank. All rights reserved.
+    </footer>
+
+  </div>
+
+  <!-- Error Modal -->
+  <div id="pointsModal" class="modal">
+    <div class="modal-content error">
+      <span class="close">&times;</span>
+      <h3>Not Enough Points</h3>
+      <p>Your Points Balance : <span id="modalBalance">0</span></p>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div id="successModal" class="modal">
+    <div class="modal-content success">
+      <span class="close">&times;</span>
+      <h3>Successfully Redeemed</h3>
+      <p>Your Points Balance : <span id="successBalance">0</span></p>
+    </div>
+  </div>
+
+  <!-- Logout Modal -->
+  <div id="logoutModal" class="modal">
+    <div class="modal-content">
+      <h3>Are you sure want to log out ?</h3>
+      <p>You'll need to log in again to access your account</p>
+      <div class="modal-actions">
+        <button id="confirmLogout" class="confirm-btn">Log Out</button>
+        <button id="cancelLogout" class="cancel-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart Modal -->
+  <div id="cartModal" class="modal">
+    <div class="modal-content cart-popup">
+      <span class="close">&times;</span>
+      <h3 id="cartItemName">Item Added to Cart</h3>
+      <img id="cartItemImg" src="" alt="Product" class="popup-img">
+      <p class="popup-price"><span id="cartItemPrice"></span> Points</p>
+      <p class="popup-qty">Qty: <span id="cartItemQty">1</span></p>
+      <div class="popup-actions">
+        <button id="goToCartBtn" class="btn btn-cart">Go to Cart</button>
+        <button id="continueBtn" class="btn btn-redeem">Continue Shopping</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Redeem Modal -->
+  <div id="redeemModal" class="modal">
+    <div class="modal-content cart-popup">
+      <span class="close">&times;</span>
+      <h3 id="redeemItemName">Redeemed Successfully</h3>
+      <img id="redeemItemImg" src="" alt="Voucher" class="popup-img">
+      <p class="popup-price">Cost: <span id="redeemItemPrice"></span> Points</p>
+      <p>Remaining Balance: <span id="updatedBalance"></span> Points</p>
+      <div class="popup-actions">
+        <button id="downloadVoucherBtn" class="btn btn-cart">Download Voucher</button>
+        <button id="continueRedeemBtn" class="btn btn-redeem">Continue Shopping</button>
+      </div>
+    </div>
+  </div>
+
+ <script type="module" defer>
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+import { 
+  getFirestore, 
+  doc, 
+  getDoc, 
+  updateDoc, 
+  setDoc, 
+  collection, 
+  addDoc 
+} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+/* ========== PDF GENERATOR WITH QR CODE ========== */
+window.VoucherPDFGenerator = {
+  getImageDataURL: function(imageUrl) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      img.onload = function() {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+          resolve(dataURL);
+        } catch (error) {
+          console.error('Error converting image to base64:', error);
+          resolve(null);
+        }
+      };
+      
+      img.onerror = function() {
+        console.error('Failed to load image:', imageUrl);
+        resolve(null);
+      };
+      
+      img.src = imageUrl;
+      
+      setTimeout(() => {
+        if (!img.complete) {
+          resolve(null);
+        }
+      }, 5000);
+    });
+  },
+
+  generatePDF: async function(voucherData) {
+    try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      const primaryColor = [140, 26, 106];
+      const textColor = [51, 51, 51];
+      const lightGray = [200, 200, 200];
+
+      doc.setFillColor(...primaryColor);
+      doc.rect(0, 0, 210, 40, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(24);
+      doc.setFont(undefined, 'bold');
+      doc.text('OPTIMA BANK', 105, 20, { align: 'center' });
+      doc.setFontSize(14);
+      doc.text('VOUCHER REDEMPTION', 105, 30, { align: 'center' });
+
+      doc.setDrawColor(...lightGray);
+      doc.setLineWidth(0.5);
+      doc.rect(15, 50, 180, 120);
+
+      const qrData = `
+Voucher: ${voucherData.name}
+Code: ${voucherData.code}
+User: ${voucherData.userName}
+Value: ${voucherData.price} Points
+Redeemed: ${voucherData.date}
+Expires: ${voucherData.expires}
+      `.trim();
+
+      const qrUrl = await new Promise((resolve) => {
+        QRCode.toDataURL(qrData, { width: 100, margin: 1 }, (err, url) => {
+          if (err) {
+            console.error("QR Code generation failed:", err);
+            resolve(null);
+          } else {
+            resolve(url);
+          }
+        });
+      });
+
+      const imageDataURL = await this.getImageDataURL(voucherData.img);
+
+      if (imageDataURL) {
+        try {
+          doc.addImage(imageDataURL, 'JPEG', 20, 55, 80, 60);
+        } catch (imgErr) {
+          console.error('Error adding image to PDF:', imgErr);
+          this.drawImagePlaceholder(doc, lightGray, textColor);
+        }
+      } else {
+        this.drawImagePlaceholder(doc, lightGray, textColor);
+      }
+
+      this.addPDFTextContent(doc, voucherData, primaryColor, textColor, lightGray);
+
+      if (qrUrl) {
+        doc.addImage(qrUrl, 'PNG', 85, 180, 40, 40);
+      } else {
+        doc.setDrawColor(...lightGray);
+        doc.rect(85, 180, 40, 40);
+      }
+
+      doc.setFontSize(10);
+      doc.setTextColor(...textColor);
+      doc.text('Scan QR Code', 105, 225, { align: 'center' });
+      doc.setFontSize(8);
+      doc.text('for verification', 105, 231, { align: 'center' });
+
+      doc.setFillColor(...primaryColor);
+      doc.rect(0, 270, 210, 27, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(10);
+      doc.text('Thank you for choosing Optima Bank!', 105, 280, { align: 'center' });
+      doc.setFontSize(9);
+      doc.text('For support: support@optimabank.com', 105, 287, { align: 'center' });
+
+      doc.save(`Optima_Bank_Voucher_${voucherData.code}.pdf`);
+      return true;
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      return false;
+    }
+  },
+
+  drawImagePlaceholder: function(doc, lightGray, textColor) {
+    doc.setDrawColor(...lightGray);
+    doc.rect(160, 55, 30, 30);
+    doc.setFillColor(240, 240, 240);
+    doc.rect(160, 55, 30, 30, 'F');
+    doc.setFontSize(8);
+    doc.setTextColor(...textColor);
+    doc.text('No Image', 175, 72, { align: 'center' });
+  },
+
+  addPDFTextContent: function(doc, voucherData, primaryColor, textColor, lightGray) {
+    doc.setTextColor(...textColor);
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+
+    let y = 65;
+    const leftMargin = 25;
+    const lineHeight = 10;
+
+    doc.text('Voucher:', leftMargin, y);
+    doc.setFont(undefined, 'normal');
+    const voucherName = voucherData.name.length > 25 ? voucherData.name.substring(0, 25) + '...' : voucherData.name;
+    doc.text(voucherName, leftMargin + 30, y);
+
+    y += lineHeight;
+    doc.setFont(undefined, 'bold');
+    doc.text('Code:', leftMargin, y);
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(14);
+    doc.setTextColor(...primaryColor);
+    doc.text(voucherData.code, leftMargin + 30, y);
+
+    y += lineHeight + 2;
+    doc.setTextColor(...textColor);
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text('Value:', leftMargin, y);
+    doc.setFont(undefined, 'normal');
+    doc.text(`${voucherData.price} Points`, leftMargin + 30, y);
+
+    y += lineHeight + 5;
+    doc.setFont(undefined, 'bold');
+    doc.text('Redeemed Date:', leftMargin, y);
+    doc.setFont(undefined, 'normal');
+    doc.text(voucherData.date, leftMargin + 40, y);
+
+    y += lineHeight;
+    doc.setFont(undefined, 'bold');
+    doc.text('Expires On:', leftMargin, y);
+    doc.setFont(undefined, 'normal');
+    doc.text(voucherData.expires, leftMargin + 40, y);
+
+    y += lineHeight;
+    doc.setFont(undefined, 'bold');
+    doc.text('User:', leftMargin, y);
+    doc.setFont(undefined, 'normal');
+    doc.text(voucherData.userName, leftMargin + 40, y);
+
+    y += lineHeight + 5;
+    doc.setDrawColor(...lightGray);
+    doc.line(25, y, 185, y);
+
+    y += 10;
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'bold');
+    doc.text('TERMS & CONDITIONS:', leftMargin, y);
+
+    y += 8;
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    const terms = [
+      '• This voucher is valid until expiry date',
+      '• Cannot be exchanged for cash',
+      '• One-time use only',
+      '• Present this voucher at the time of purchase'
+    ];
+    terms.forEach(term => {
+      doc.text(term, leftMargin + 5, y);
+      y += 6;
+    });
+  }
+};
+
+/* ========== FIREBASE INIT ========== */
+const firebaseConfig = {
+  apiKey: "AIzaSyAdQIM_mmd2860_QxvO4_Nqfp9p1jDuFsA",
+  authDomain: "optima-bank-login-9a2ab.firebaseapp.com",
+  projectId: "optima-bank-login-9a2ab",
+  storageBucket: "optima-bank-login-9a2ab.appspot.com",
+  messagingSenderId: "114013201106",
+  appId: "1:114013201106:web:75fdcd84a9861a6769c30b",
+  measurementId: "G-P2P25G8F9W"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* DOM ELEMENTS */
+const nameEl = document.getElementById("loggedInUserName");
+const pointsEl = document.getElementById("loggedInUserPoints");
+const voucherDetails = document.getElementById("voucherDetails");
+const voucherImg = document.getElementById("voucherImg");
+const errorModal = document.getElementById("pointsModal");
+const successModal = document.getElementById("successModal");
+const cartModal = document.getElementById("cartModal");
+const modalBalance = document.getElementById("modalBalance");
+const successBalance = document.getElementById("successBalance");
+const logoutBtn = document.getElementById("logoutBtn");
+const logoutModal = document.getElementById("logoutModal");
+const confirmLogout = document.getElementById("confirmLogout");
+const cancelLogout = document.getElementById("cancelLogout");
+const cartBtn = document.getElementById("cartBtn");
+const cartDropdown = document.getElementById("cartDropdown");
+const cartItemsEl = document.getElementById("cartItems");
+const cartCountEl = document.getElementById("cartCount");
+const emptyCartMsg = document.getElementById("emptyCartMsg");
+const notificationBtn = document.getElementById("notificationBtn");
+const notificationDropdown = document.getElementById("notificationDropdown");
+const notificationList = document.getElementById("notificationList");
+const notificationBadge = document.getElementById("notificationBadge");
+const clearAllBtn = document.getElementById("clearAllBtn");
+
+/* STATE */
+let balance = 0;
+let currentUserId = null;
+let cartData = [];
+let notifications = [];
+let lastRedeemedVoucher = null;
+let downloadedVouchers = new Set();
+
+/* LOAD & SAVE NOTIFICATIONS */
+async function loadNotifications() {
+  if (!currentUserId) return;
+  
+  try {
+    const userRef = doc(db, "users", currentUserId);
+    const userSnap = await getDoc(userRef);
+    
+    if (userSnap.exists() && userSnap.data().notifications) {
+      notifications = userSnap.data().notifications;
+      updateNotificationUI();
+    }
+  } catch (error) {
+    console.error("Error loading notifications:", error);
+  }
+}
+
+async function saveNotifications() {
+  if (!currentUserId) return;
+  
+  try {
+    const userRef = doc(db, "users", currentUserId);
+    await updateDoc(userRef, { 
+      notifications: notifications 
+    });
+  } catch (error) {
+    console.error("Error saving notifications:", error);
+  }
+}
+
+/* NOTIFICATION FUNCTIONS */
+function addNotification(message, type = 'info', voucherCode = null) {
+  const notification = {
+    id: Date.now(),
+    message: message,
+    type: type,
+    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+    unread: true,
+    voucherCode: voucherCode,
+    downloaded: false
+  };
+  
+  notifications.unshift(notification);
+  updateNotificationUI();
+  saveNotifications();
+}
+
+function updateNotificationUI() {
+  const unreadCount = notifications.filter(n => n.unread).length;
+  
+  if (unreadCount > 0) {
+    notificationBadge.textContent = unreadCount;
+    notificationBadge.classList.add('show');
+  } else {
+    notificationBadge.classList.remove('show');
+  }
+  
+  if (notifications.length === 0) {
+    notificationList.innerHTML = '<div class="notification-empty">No new notifications</div>';
+    return;
+  }
+  
+  notificationList.innerHTML = notifications.map(notif => {
+    const isDownloaded = notif.downloaded || (notif.voucherCode && downloadedVouchers.has(notif.voucherCode));
+    const displayMessage = isDownloaded && notif.message.includes('Download your voucher') 
+      ? notif.message.replace('Download your voucher now', 'Voucher already downloaded')
+      : notif.message;
+    
+    return `
+      <div class="notification-item ${notif.unread ? 'unread' : ''}" 
+           data-id="${notif.id}" 
+           data-voucher-code="${notif.voucherCode || ''}"
+           style="${isDownloaded ? 'opacity: 0.6; cursor: default;' : ''}">
+        <div>${displayMessage}</div>
+        <div class="time">${notif.time}</div>
+      </div>
+    `;
+  }).join('');
+  
+  document.querySelectorAll('.notification-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const id = parseInt(item.dataset.id);
+      const voucherCode = item.dataset.voucherCode;
+      const notif = notifications.find(n => n.id === id);
+      
+      if (notif) {
+        notif.unread = false;
+        
+        if (notif.downloaded || (voucherCode && downloadedVouchers.has(voucherCode))) {
+          updateNotificationUI();
+          saveNotifications();
+          return;
+        }
+        
+        updateNotificationUI();
+        saveNotifications();
+        
+        if (notif.message.includes('Download your voucher') && lastRedeemedVoucher) {
+          downloadVoucher(lastRedeemedVoucher);
+          notif.downloaded = true;
+          if (voucherCode) {
+            downloadedVouchers.add(voucherCode);
+          }
+          updateNotificationUI();
+          saveNotifications();
+        }
+      }
+    });
+  });
+}
+
+notificationBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  notificationDropdown.classList.toggle('show');
+  cartDropdown.classList.remove('show');
+  notifications.forEach(n => n.unread = false);
+  updateNotificationUI();
+  saveNotifications();
+});
+
+clearAllBtn.addEventListener('click', () => {
+  notifications = [];
+  updateNotificationUI();
+  saveNotifications();
+});
+
+/* DOWNLOAD VOUCHER */
+async function downloadVoucher(voucherData) {
+  if (!voucherData) return;
+  
+  if (downloadedVouchers.has(voucherData.code)) {
+    addNotification('This voucher has already been downloaded', 'warning');
+    return;
+  }
+  
+  voucherData.userName = nameEl.textContent;
+  
+  if (window.VoucherPDFGenerator && typeof window.jspdf !== 'undefined') {
+    try {
+      const success = await window.VoucherPDFGenerator.generatePDF(voucherData);
+      if (success) {
+        downloadedVouchers.add(voucherData.code);
+        addNotification('Voucher downloaded successfully!', 'success');
+      } else {
+        downloadVoucherAsText(voucherData);
+      }
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      downloadVoucherAsText(voucherData);
+    }
+  } else {
+    downloadVoucherAsText(voucherData);
+  }
+}
+
+function downloadVoucherAsText(voucherData) {
+  const voucherContent = `
+╔═══════════════════════════════════════════════════════╗
+║                   OPTIMA BANK                         ║
+║               VOUCHER REDEMPTION                      ║
+╠═══════════════════════════════════════════════════════╣
+║  Voucher: ${voucherData.name.padEnd(41)}║
+║  Code: ${voucherData.code.padEnd(44)}║
+║  Value: ${voucherData.price} Points${' '.repeat(38 - String(voucherData.price).length)}║
+║  Redeemed Date: ${voucherData.date.padEnd(34)}║
+║  Expires On: ${voucherData.expires.padEnd(37)}║
+║  User: ${voucherData.userName.padEnd(44)}║
+╚═══════════════════════════════════════════════════════╝
+  `.trim();
+  
+  const blob = new Blob([voucherContent], { type: 'text/plain' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Optima_Bank_Voucher_${voucherData.code}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+  
+  downloadedVouchers.add(voucherData.code);
+  addNotification('Voucher downloaded successfully!', 'success');
+}
+
+function generateVoucherCode() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = 'OB-';
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+/* AUTH STATE */
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "signIn.html";
+    return;
+  }
+
+  currentUserId = user.uid;
+  
+  try {
+    const docRef = doc(db, "users", currentUserId);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      nameEl.textContent = data.firstName || user.displayName || "User";
+      balance = data.points || 0;
+      updateBalanceUI();
+      updateCartUI(data.cart || []);
+      loadNotifications();
+    } else {
+      await setDoc(docRef, {
+        firstName: user.displayName || "User",
+        email: user.email,
+        points: 0,
+        cart: [],
+        notifications: []
+      });
+      balance = 0;
+      updateBalanceUI();
+    }
+  } catch (error) {
+    console.error("Error fetching user data:", error);
+  }
+
+  await loadVoucher();
+});
+
+/* BALANCE UI */
+function updateBalanceUI() {
+  pointsEl.textContent = `Balance Points: ${balance}`;
+}
+
+/* LOAD VOUCHER - THIS IS THE FIXED SECTION */
+const urlParams = new URLSearchParams(window.location.search);
+const voucherId = urlParams.get("id");
+
+async function loadVoucher() {
+  if (!voucherId) {
+    voucherDetails.innerHTML = "<p>No voucher ID provided.</p>";
+    return;
+  }
+
+  console.log("Loading voucher with ID:", voucherId);
+
+  try {
+    const docRef = doc(db, "vouchers", voucherId);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const voucher = docSnap.data();
+      voucher.id = docSnap.id;
+
+      console.log("Voucher data loaded:", voucher);
+
+      let featuresHTML = '';
+      if (Array.isArray(voucher.features) && voucher.features.length > 0) {
+        featuresHTML = `<ul>${voucher.features.map(f => `<li>${f}</li>`).join("")}</ul>`;
+      } else if (typeof voucher.features === 'string') {
+        featuresHTML = `<p>${voucher.features}</p>`;
+      }
+
+      voucherDetails.innerHTML = `
+        <h2>${voucher.name || 'Voucher'}</h2>
+        <p>${voucher.description || 'No description available'}</p>
+        ${featuresHTML}
+        <div class="points-text"><span id="price">${voucher.points || voucher.price || 0}</span> Points</div>
+        <div class="terms">
+          <input type="checkbox" id="agree">
+          <label for="agree">I agree to the terms and conditions</label>
+        </div>
+        <div class="buttons">
+          <button class="btn btn-redeem" id="redeemBtn">REDEEM</button>
+          <button class="btn btn-cart" id="addCartBtn">ADD TO CART</button>
+        </div>
+      `;
+
+      // FIXED IMAGE LOADING CODE
+      const imageUrl = voucher.imageURL || voucher.image || '';
+      console.log("Image URL from database:", imageUrl);
+      
+      if (imageUrl) {
+        voucherImg.src = imageUrl;
+        
+        voucherImg.onload = () => {
+          console.log("✅ Image loaded successfully:", imageUrl);
+        };
+        
+        voucherImg.onerror = () => {
+          console.error("❌ Failed to load image:", imageUrl);
+          voucherImg.src = 'img/placeholder.png';
+        };
+      } else {
+        console.warn("⚠️ No image URL found in voucher data");
+        voucherImg.src = 'img/placeholder.png';
+      }
+
+      setupRedeem(voucher);
+      setupCart(voucher);
+    } else {
+      console.error("Voucher not found in database");
+      voucherDetails.innerHTML = "<p>Voucher not found in database.</p>";
+    }
+  } catch (err) {
+    console.error("Error loading voucher:", err);
+    voucherDetails.innerHTML = `<p>Error loading voucher details: ${err.message}</p>`;
+  }
+}
+
+/* REDEEM FUNCTION */
+function setupRedeem(voucher) {
+  const redeemBtn = document.getElementById("redeemBtn");
+  if (!redeemBtn) return;
+  
+  redeemBtn.addEventListener("click", async () => {
+    const agreeCheckbox = document.getElementById("agree");
+    if (!agreeCheckbox || !agreeCheckbox.checked) {
+      alert("Please agree to the terms and conditions.");
+      return;
+    }
+
+    const voucherPoints = voucher.points || voucher.price || 0;
+
+    if (voucherPoints <= balance) {
+      balance -= voucherPoints;
+      updateBalanceUI();
+      successBalance.textContent = balance;
+
+      const voucherCode = generateVoucherCode();
+      const redeemedDate = new Date().toLocaleDateString("en-GB");
+      const expiryDate = new Date();
+      expiryDate.setMonth(expiryDate.getMonth() + 3);
+      const expiresOn = expiryDate.toLocaleDateString("en-GB");
+
+      lastRedeemedVoucher = {
+        name: voucher.name || 'Voucher',
+        code: voucherCode,
+        price: voucherPoints,
+        img: voucher.imageURL || voucher.image || '',
+        date: redeemedDate,
+        expires: expiresOn
+      };
+
+      try {
+        const userRef = doc(db, "users", currentUserId);
+        await updateDoc(userRef, { points: balance });
+
+        const redeemedVoucher = {
+          id: voucher.id,
+          name: voucher.name || 'Voucher',
+          price: voucherPoints,
+          img: voucher.imageURL || voucher.image || '',
+          code: voucherCode,
+          redeemed_date: redeemedDate,
+          expires_on: expiresOn
+        };
+
+        await addDoc(collection(db, "users", currentUserId, "redeemed"), redeemedVoucher);
+
+        document.getElementById("redeemItemName").textContent = (voucher.name || 'Voucher') + " Redeemed!";
+        document.getElementById("redeemItemImg").src = voucher.imageURL || voucher.image || '';
+        document.getElementById("redeemItemPrice").textContent = voucherPoints;
+        document.getElementById("updatedBalance").textContent = balance;
+        document.getElementById("redeemModal").style.display = "flex";
+
+        addNotification(`${voucher.name || 'Voucher'} redeemed successfully! Download your voucher now.`, 'success', voucherCode);
+      } catch (error) {
+        console.error("Error redeeming voucher:", error);
+        alert("Error redeeming voucher. Please try again.");
+      }
+    } else {
+      modalBalance.textContent = balance;
+      errorModal.style.display = "flex";
+    }
+  });
+}
+
+/* ADD TO CART FUNCTION */
+function setupCart(voucher) {
+  const addCartBtn = document.getElementById("addCartBtn");
+  if (!addCartBtn) return;
+  
+  addCartBtn.addEventListener("click", async () => {
+    if (!currentUserId) {
+      alert("You must be logged in to add to cart!");
+      return;
+    }
+
+    const voucherPoints = voucher.points || voucher.price || 0;
+
+    const product = {
+      id: voucher.id,
+      name: voucher.name || 'Voucher',
+      price: voucherPoints,
+      img: voucher.imageURL || voucher.image || '',
+      qty: 1
+    };
+
+    try {
+      const userRef = doc(db, "users", currentUserId);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        let userData = userSnap.data();
+        let cart = userData.cart || [];
+
+        const existingIndex = cart.findIndex(item => item.id === product.id);
+        if (existingIndex > -1) {
+          cart[existingIndex].qty += 1;
+        } else {
+          cart.push(product);
+        }
+
+        await updateDoc(userRef, { cart });
+        updateCartUI(cart);
+
+        document.getElementById("cartItemName").textContent = product.name;
+        document.getElementById("cartItemImg").src = product.img;
+        document.getElementById("cartItemPrice").textContent = product.price;
+        document.getElementById("cartItemQty").textContent = 
+          existingIndex > -1 ? cart[existingIndex].qty : 1;
+
+        cartModal.style.display = "flex";
+        
+        addNotification(`${product.name} added to cart`, 'info');
+      } else {
+        await setDoc(userRef, { cart: [product] }, { merge: true });
+        updateCartUI([product]);
+        
+        document.getElementById("cartItemName").textContent = product.name;
+        document.getElementById("cartItemImg").src = product.img;
+        document.getElementById("cartItemPrice").textContent = product.price;
+        document.getElementById("cartItemQty").textContent = 1;
+
+        cartModal.style.display = "flex";
+        
+        addNotification(`${product.name} added to cart`, 'info');
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      alert("Error adding to cart. Please try again.");
+    }
+  });
+}
+
+/* PROFILE DROPDOWN */
+const profileToggle = document.querySelector(".profile-toggle");
+const profileEl = document.querySelector(".profile");
+
+if (profileToggle) {
+  profileToggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    profileEl.classList.toggle("active");
+    notificationDropdown.classList.remove('show');
+    cartDropdown.classList.remove('show');
+  });
+}
+
+/* CART DROPDOWN */
+function updateCartUI(cart) {
+  cartData = cart;
+  cartItemsEl.innerHTML = "";
+
+  if (!cart || cart.length === 0) {
+    emptyCartMsg.style.display = "block";
+    cartCountEl.textContent = 0;
+    return;
+  }
+
+  emptyCartMsg.style.display = "none";
+  cartCountEl.textContent = cart.reduce((sum, item) => sum + item.qty, 0);
+
+  cart.forEach(item => {
+    const li = document.createElement("li");
+    li.classList.add("cart-item");
+    li.innerHTML = `
+      <img src="${item.img}" alt="${item.name}" class="cart-thumb">
+      <div class="cart-info">
+        <p class="cart-name">${item.name}</p>
+        <p class="cart-qty">${item.price} pts × ${item.qty}</p>
+      </div>
+    `;
+    cartItemsEl.appendChild(li);
+  });
+}
+
+cartBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  cartDropdown.classList.toggle("show");
+  notificationDropdown.classList.remove('show');
+});
+
+/* DOWNLOAD VOUCHER BUTTON */
+document.getElementById("downloadVoucherBtn").addEventListener("click", () => {
+  if (lastRedeemedVoucher && !downloadedVouchers.has(lastRedeemedVoucher.code)) {
+    downloadVoucher(lastRedeemedVoucher);
+    const btn = document.getElementById("downloadVoucherBtn");
+    btn.textContent = "Downloaded";
+    btn.style.background = "#6c757d";
+    btn.style.cursor = "not-allowed";
+    btn.disabled = true;
+  } else if (lastRedeemedVoucher && downloadedVouchers.has(lastRedeemedVoucher.code)) {
+    addNotification('This voucher has already been downloaded', 'warning');
+  }
+});
+
+/* LOGOUT */
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    logoutModal.style.display = "flex";
+  });
+}
+if (confirmLogout) {
+  confirmLogout.addEventListener("click", () => {
+    logoutModal.style.display = "none";
+    signOut(auth).then(() => {
+      window.location.href = "signIn.html";
+    });
+  });
+}
+if (cancelLogout) {
+  cancelLogout.addEventListener("click", () => {
+    logoutModal.style.display = "none";
+  });
+}
+
+/* CLOSE MODALS */
+document.querySelectorAll(".modal .close").forEach(closeBtn => {
+  closeBtn.addEventListener("click", () => {
+    closeBtn.closest(".modal").style.display = "none";
+  });
+});
+
+window.addEventListener("click", (e) => {
+  document.querySelectorAll(".modal").forEach(modal => {
+    if (e.target === modal) modal.style.display = "none";
+  });
+  
+  if (!notificationBtn.contains(e.target)) {
+    notificationDropdown.classList.remove('show');
+  }
+  if (!cartBtn.contains(e.target)) {
+    cartDropdown.classList.remove('show');
+  }
+  if (profileEl && !profileEl.contains(e.target)) {
+    profileEl.classList.remove("active");
+  }
+});
+
+document.getElementById("continueRedeemBtn").onclick = () => {
+  document.getElementById("redeemModal").style.display = "none";
+  const btn = document.getElementById("downloadVoucherBtn");
+  btn.textContent = "Download Voucher";
+  btn.style.background = "";
+  btn.style.cursor = "";
+  btn.disabled = false;
+};
+
+document.getElementById("continueBtn").onclick = () => {
+  cartModal.style.display = "none";
+};
+
+document.getElementById("goToCartBtn").onclick = () => {
+  window.location.href = "cart.html";
+};
+
+ </script>
+</body>
+</html>

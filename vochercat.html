@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Optima Bank - Promotion Products</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link rel="stylesheet" href="static/vochercat.css" />
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="logo" onclick="window.location.href='landingpage.html'">
+    Optima Bank
+  </div>
+
+  <div class="header-right">
+    <div id="loggedInUserPoints" class="point-balance">Balance Points: 0</div>
+
+    <!-- Notification -->
+    <div class="notification" id="notificationBtn">
+      <img src="img/icons8-notification-96.png" alt="Bell Icon" class="bell-icon">
+      <span class="notification-badge" id="notificationBadge">0</span>
+      
+      <div class="dropdown-content" id="notificationDropdown">
+        <div class="notification-header">
+          <span>Notifications</span>
+          <button class="clear-all-btn" id="clearAllBtn">Clear All</button>
+        </div>
+        <div id="notificationList">
+          <div class="notification-empty">No new notifications</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cart Button -->
+    <div class="cart" id="cartBtn">
+      <span>Cart (<span id="cartCount">0</span>)</span>
+      <img src="img/icons8-cart-96.png" alt="Cart Icon" class="cart-icon">
+      
+      <!-- Cart Dropdown -->
+      <div id="cartDropdown" class="dropdown-content">
+        <ul id="cartItems"></ul>
+        <p id="emptyCartMsg">Your cart is empty</p>
+      </div>
+    </div>
+
+    <!-- Profile -->
+    <div class="profile">
+      <div class="profile-toggle">
+        <span id="loggedInUserName">User</span>
+        <img src="img/download.png" alt="Profile" class="profile-pic">
+      </div>
+      <div class="dropdown">
+        <a href="MyAccount.html">My Account</a>
+        <a href="historyreddemed.html">History</a>
+        <a href="cart.html">My Cart</a>
+        <a href="terms.html">Terms & Conditions</a>
+        <button id="logoutBtn" class="logout-btn">Logout</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Main Section -->
+<main>
+  <section class="deals">
+    <h2>Promotion Products</h2>
+    <div class="deal-grid">
+
+      <!-- Adidas -->
+      <div class="deal-card" 
+          data-id="adidas-shirt" 
+          data-name="Adidas Classic Shirt Voucher" 
+          data-price="1200" 
+          data-img="adidas vocher cat.jpg">
+        <span class="new-badge">NEW</span>
+        <img src="img/adidas vocher cat.jpg" alt="Adidas">
+        <div class="deal-info">
+          <h3>Adidas</h3>
+          <p class="price" data-price="1200">1200 Points</p>
+          <div class="buttons">
+            <button class="btn btn-redeem">Redeem</button>
+            <button class="btn btn-cart">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Puma --> 
+      <div class="deal-card" 
+          data-id="Puma Shoe"
+          data-name="Voucher Puma Shoe" 
+          data-price="1000" 
+          data-img="puma shoes.jpg">
+        <span class="new-badge">NEW</span>
+        <img src="img/puma shoes.jpg" alt="Puma">
+        <div class="deal-info">
+          <h3>Puma</h3>
+          <p class="price" data-price="1000">1000 Points</p>
+          <div class="buttons">
+            <button class="btn btn-redeem">Redeem</button>
+            <button class="btn btn-cart">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Urban Vogue -->
+      <div class="deal-card" 
+          data-id="Urban Vogue"
+          data-name="Voucher Urban Vogue"
+          data-price="800" 
+          data-img="urban vogue1.png">
+        <span class="new-badge">NEW</span>
+        <img src="img/urban vogue1.png" alt="Urban Vogue">
+        <div class="deal-info">
+          <h3>Urban Vogue</h3>
+          <p class="price" data-price="800">800 Points</p>
+          <div class="buttons">
+            <button class="btn btn-redeem">Redeem</button>
+            <button class="btn btn-cart">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nike -->
+      <div class="deal-card" 
+          data-id="Nike-Shoe"
+          data-name="Voucher Nike Shoe"
+          data-price="1500"
+          data-img="Nike shose.png">
+        <span class="new-badge">NEW</span>
+        <img src="img/Nike shose.png" alt="Nike">
+        <div class="deal-info">
+          <h3>Nike</h3>
+          <p class="price" data-price="1500">1500 Points</p>
+          <div class="buttons">
+            <button class="btn btn-redeem">Redeem</button>
+            <button class="btn btn-cart">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+<!-- Footer -->
+<footer>
+  <a href="#">Privacy Policy</a> | 
+  <a href="#">Terms of Service</a> | 
+  <a href="#">Cookie Policy</a><br>
+  &copy; 2025 Optima Bank. All rights reserved.
+</footer>
+
+<!-- Error Modal -->
+<div id="pointsModal" class="modal">
+  <div class="modal-content error">
+    <span class="close">&times;</span>
+    <h3>Not Enough Points</h3>
+    <p>Your Points Balance : <span id="modalBalance">0</span></p>
+  </div>
+</div>
+
+<!-- Success Modal -->
+<div id="successModal" class="modal">
+  <div class="modal-content success">
+    <span class="close">&times;</span>
+    <h3>Successfully Redeemed</h3>
+    <p>Your Points Balance : <span id="successBalance">0</span></p>
+  </div>
+</div>
+
+<!-- Logout Modal -->
+<div id="logoutModal" class="modal">
+  <div class="modal-content">
+    <h3>Are you sure want to log out ?</h3>
+    <p>You'll need to log in again to access your account</p>
+    <div class="modal-actions">
+      <button id="confirmLogout" class="confirm-btn">Log Out</button>
+      <button id="cancelLogout" class="cancel-btn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cart Modal -->
+<div id="cartModal" class="modal">
+  <div class="modal-content cart-popup">
+    <span class="close">&times;</span>
+    <h3 id="cartItemName">Item Added to Cart</h3>
+    <img id="cartItemImg" src="" alt="Product" class="popup-img">
+    <p class="popup-price"><span id="cartItemPrice"></span> Points</p>
+    <p class="popup-qty">Qty: <span id="cartItemQty">1</span></p>
+    <div class="popup-actions">
+      <button id="goToCartBtn" class="btn btn-cart">Go to Cart</button>
+      <button id="continueBtn" class="btn btn-redeem">Continue Shopping</button>
+    </div>
+  </div>
+</div>
+
+<!-- Redeem Modal -->
+<div id="redeemModal" class="modal">
+  <div class="modal-content cart-popup">
+    <span class="close">&times;</span>
+    <h3 id="redeemItemName">Redeemed Successfully</h3>
+    <img id="redeemItemImg" src="" alt="Voucher" class="popup-img">
+    <p class="popup-price">Cost: <span id="redeemItemPrice"></span> Points</p>
+    <p>Remaining Balance: <span id="updatedBalance"></span> Points</p>
+    <div class="popup-actions">
+      <button id="downloadVoucherBtn" class="btn btn-cart">Download Voucher</button>
+      <button id="continueRedeemBtn" class="btn btn-redeem">Continue Shopping</button>
+    </div>
+  </div>
+</div>
+
+<script src="java/vochercat.js" type="module" defer></script>
+
+</body>
+</html>
