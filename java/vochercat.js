@@ -10,16 +10,32 @@ import {
   addDoc 
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
+/* ========== WAIT FOR LIBRARIES ========== */
+function waitForLibraries() {
+  return new Promise((resolve) => {
+    const checkLibraries = () => {
+      if (typeof window.jspdf !== 'undefined' && typeof QRCode !== 'undefined') {
+        console.log('✓ All libraries loaded successfully');
+        resolve(true);
+      } else {
+        console.log('⏳ Waiting for libraries...', {
+          jsPDF: typeof window.jspdf !== 'undefined',
+          QRCode: typeof QRCode !== 'undefined'
+        });
+        setTimeout(checkLibraries, 100);
+      }
+    };
+    checkLibraries();
+  });
+}
+
 /* ========== PDF GENERATOR ========== */
 window.VoucherPDFGenerator = {
   generatePDF: async function(voucherData) {
     try {
-      // Check if jsPDF is loaded
-      if (typeof window.jspdf === 'undefined') {
-        console.error('jsPDF not loaded');
-        return false;
-      }
-
+      // Wait for libraries to be loaded
+      await waitForLibraries();
+      
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
       
@@ -45,69 +61,81 @@ window.VoucherPDFGenerator = {
       // Create QR Code data
       const qrData = `Voucher: ${voucherData.name}\nCode: ${voucherData.code}\nUser: ${voucherData.userName}\nValue: ${voucherData.price} Points\nRedeemed: ${voucherData.date}\nExpires: ${voucherData.expires}`;
 
-      // Generate QR code as Data URL
-      const qrUrl = await new Promise((resolve, reject) => {
-        if (typeof QRCode === 'undefined') {
-          console.error('QRCode library not loaded');
-          reject('QRCode not available');
-          return;
-        }
-        
-        QRCode.toDataURL(qrData, { width: 100, margin: 1 }, (err, url) => {
-          if (err) {
-            console.error("QR Code generation failed:", err);
-            reject(err);
-          } else {
-            resolve(url);
-          }
+      // Generate QR code as Data URL with better error handling
+      let qrUrl;
+      try {
+        qrUrl = await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => reject('QR timeout'), 3000);
+          QRCode.toDataURL(qrData, { 
+            width: 100, 
+            margin: 1,
+            errorCorrectionLevel: 'M'
+          }, (err, url) => {
+            clearTimeout(timeout);
+            if (err) {
+              console.error("QR Code generation failed:", err);
+              reject(err);
+            } else {
+              resolve(url);
+            }
+          });
         });
-      });
+      } catch (qrError) {
+        console.warn('QR Code generation failed, continuing without it');
+        qrUrl = null;
+      }
 
-      // Load voucher image
-      const imgUrl = await new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        
-        // Set a timeout for image loading
-        const timeout = setTimeout(() => {
-          console.warn('Image loading timeout, using placeholder');
-          reject('timeout');
-        }, 5000);
-        
-        img.onload = () => {
-          clearTimeout(timeout);
-          resolve(img);
-        };
-        
-        img.onerror = () => {
-          clearTimeout(timeout);
-          console.warn('Image failed to load, using placeholder');
-          reject('error');
-        };
-        
-        img.src = 'img/' + voucherData.img;
-      }).catch(() => null);
+      // Try to load voucher image WITHOUT crossOrigin (this is the key fix!)
+      let imgData = null;
+      try {
+        imgData = await new Promise((resolve, reject) => {
+          const img = new Image();
+          // REMOVED: img.crossOrigin = 'anonymous'; 
+          // This was causing CORS issues on deployed sites
+          
+          const timeout = setTimeout(() => {
+            reject('timeout');
+          }, 3000);
+          
+          img.onload = () => {
+            clearTimeout(timeout);
+            try {
+              // Convert to base64 to avoid CORS issues
+              const canvas = document.createElement('canvas');
+              canvas.width = img.width;
+              canvas.height = img.height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0);
+              const dataUrl = canvas.toDataURL('image/jpeg');
+              resolve(dataUrl);
+            } catch (e) {
+              console.warn('Canvas conversion failed:', e);
+              reject(e);
+            }
+          };
+          
+          img.onerror = () => {
+            clearTimeout(timeout);
+            reject('error');
+          };
+          
+          // Try absolute path first, then relative
+          img.src = 'img/' + voucherData.img;
+        });
+      } catch (imgError) {
+        console.warn('Image loading failed:', imgError);
+      }
 
       // Draw voucher image if loaded
-      if (imgUrl) {
+      if (imgData) {
         try {
-          doc.addImage(imgUrl, 'JPEG', 160, 55, 30, 30);
+          doc.addImage(imgData, 'JPEG', 160, 55, 30, 30);
         } catch (e) {
           console.warn('Failed to add image to PDF:', e);
-          // Draw placeholder
-          doc.setDrawColor(...lightGray);
-          doc.rect(160, 55, 30, 30);
-          doc.setFontSize(8);
-          doc.setTextColor(...textColor);
-          doc.text('Image', 175, 72, { align: 'center' });
+          this.drawImagePlaceholder(doc, lightGray, textColor);
         }
       } else {
-        // Draw placeholder
-        doc.setDrawColor(...lightGray);
-        doc.rect(160, 55, 30, 30);
-        doc.setFontSize(8);
-        doc.setTextColor(...textColor);
-        doc.text('Image', 175, 72, { align: 'center' });
+        this.drawImagePlaceholder(doc, lightGray, textColor);
       }
 
       // Text details
@@ -183,14 +211,26 @@ window.VoucherPDFGenerator = {
         y += 6;
       });
 
-      // Add QR code image to bottom
-      doc.addImage(qrUrl, 'PNG', 85, 180, 40, 40);
-
-      doc.setFontSize(10);
-      doc.setTextColor(...textColor);
-      doc.text('Scan QR Code', 105, 225, { align: 'center' });
-      doc.setFontSize(8);
-      doc.text('for verification', 105, 231, { align: 'center' });
+      // Add QR code if available
+      if (qrUrl) {
+        try {
+          doc.addImage(qrUrl, 'PNG', 85, 180, 40, 40);
+          doc.setFontSize(10);
+          doc.setTextColor(...textColor);
+          doc.text('Scan QR Code', 105, 225, { align: 'center' });
+          doc.setFontSize(8);
+          doc.text('for verification', 105, 231, { align: 'center' });
+        } catch (e) {
+          console.warn('Failed to add QR code:', e);
+        }
+      } else {
+        // QR placeholder
+        doc.setDrawColor(...lightGray);
+        doc.rect(85, 180, 40, 40);
+        doc.setFontSize(10);
+        doc.setTextColor(...textColor);
+        doc.text('QR Code', 105, 202, { align: 'center' });
+      }
 
       // Footer
       doc.setFillColor(...primaryColor);
@@ -204,11 +244,20 @@ window.VoucherPDFGenerator = {
       // Save the final PDF
       doc.save(`Optima_Bank_Voucher_${voucherData.code}.pdf`);
 
+      console.log('✓ PDF generated successfully');
       return true;
     } catch (error) {
-      console.error('PDF generation error:', error);
+      console.error('❌ PDF generation error:', error);
       return false;
     }
+  },
+
+  drawImagePlaceholder: function(doc, lightGray, textColor) {
+    doc.setDrawColor(...lightGray);
+    doc.rect(160, 55, 30, 30);
+    doc.setFontSize(8);
+    doc.setTextColor(...textColor);
+    doc.text('Voucher', 175, 72, { align: 'center' });
   }
 };
 
@@ -365,26 +414,17 @@ async function downloadVoucher(voucherData) {
   
   voucherData.userName = nameEl.textContent;
   
-  // Check if libraries are loaded
-  const jsPDFLoaded = typeof window.jspdf !== 'undefined';
-  const qrCodeLoaded = typeof QRCode !== 'undefined';
+  console.log('🔄 Starting voucher download...');
   
-  console.log('jsPDF loaded:', jsPDFLoaded);
-  console.log('QRCode loaded:', qrCodeLoaded);
-  
-  if (jsPDFLoaded && qrCodeLoaded) {
-    try {
-      const success = await window.VoucherPDFGenerator.generatePDF(voucherData);
-      if (success) {
-        downloadedVouchers.add(voucherData.code);
-        addNotification('Voucher downloaded as PDF successfully!', 'success');
-        return;
-      }
-    } catch (error) {
-      console.error('PDF generation failed:', error);
+  try {
+    const success = await window.VoucherPDFGenerator.generatePDF(voucherData);
+    if (success) {
+      downloadedVouchers.add(voucherData.code);
+      addNotification('Voucher downloaded as PDF successfully!', 'success');
+      return;
     }
-  } else {
-    console.warn('Required libraries not loaded. jsPDF:', jsPDFLoaded, 'QRCode:', qrCodeLoaded);
+  } catch (error) {
+    console.error('PDF generation failed, falling back to text:', error);
   }
   
   // Fallback to text download
@@ -423,7 +463,7 @@ Terms & Conditions:
   window.URL.revokeObjectURL(url);
   
   downloadedVouchers.add(voucherData.code);
-  addNotification('Voucher downloaded as text file (PDF libraries not available)', 'warning');
+  addNotification('Voucher downloaded as text (PDF generation unavailable)', 'warning');
 }
 
 /* ========== AUTH STATE ========== */
