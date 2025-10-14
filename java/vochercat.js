@@ -12,259 +12,203 @@ import {
 
 /* ========== PDF GENERATOR ========== */
 window.VoucherPDFGenerator = {
-generatePDF: function(voucherData) {
-  try {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    const primaryColor = [140, 26, 106];
-    const textColor = [51, 51, 51];
-    const lightGray = [200, 200, 200];
-
-    // Header
-    doc.setFillColor(...primaryColor);
-    doc.rect(0, 0, 210, 40, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(24);
-    doc.setFont(undefined, 'bold');
-    doc.text('OPTIMA BANK', 105, 20, { align: 'center' });
-    doc.setFontSize(14);
-    doc.text('VOUCHER REDEMPTION', 105, 30, { align: 'center' });
-
-    // Main content box
-    doc.setDrawColor(...lightGray);
-    doc.setLineWidth(0.5);
-    doc.rect(15, 50, 180, 120);
-
-    // Create QR Code data
-    const qrData = `
-Voucher: ${voucherData.name}
-Code: ${voucherData.code}
-User: ${voucherData.userName}
-Value: ${voucherData.price} Points
-Redeemed: ${voucherData.date}
-Expires: ${voucherData.expires}
-    `.trim();
-
-    // Generate QR code as Data URL
-    QRCode.toDataURL(qrData, { width: 100, margin: 1 }, (err, qrUrl) => {
-      if (err) {
-        console.error("QR Code generation failed:", err);
-        return;
+  generatePDF: async function(voucherData) {
+    try {
+      // Check if jsPDF is loaded
+      if (typeof window.jspdf === 'undefined') {
+        console.error('jsPDF not loaded');
+        return false;
       }
 
-      // Load voucher image
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.src = 'img/' + voucherData.img;
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      const primaryColor = [140, 26, 106];
+      const textColor = [51, 51, 51];
+      const lightGray = [200, 200, 200];
 
-      img.onload = () => {
-        // Draw voucher image top-right
-        doc.addImage(img, 'JPEG', 160, 55, 30, 30);
+      // Header
+      doc.setFillColor(...primaryColor);
+      doc.rect(0, 0, 210, 40, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(24);
+      doc.setFont(undefined, 'bold');
+      doc.text('OPTIMA BANK', 105, 20, { align: 'center' });
+      doc.setFontSize(14);
+      doc.text('VOUCHER REDEMPTION', 105, 30, { align: 'center' });
 
-        // Text details
-        doc.setTextColor(...textColor);
-        doc.setFontSize(12);
-        doc.setFont(undefined, 'bold');
+      // Main content box
+      doc.setDrawColor(...lightGray);
+      doc.setLineWidth(0.5);
+      doc.rect(15, 50, 180, 120);
 
-        let y = 65;
-        const leftMargin = 25;
-        const lineHeight = 10;
+      // Create QR Code data
+      const qrData = `Voucher: ${voucherData.name}\nCode: ${voucherData.code}\nUser: ${voucherData.userName}\nValue: ${voucherData.price} Points\nRedeemed: ${voucherData.date}\nExpires: ${voucherData.expires}`;
 
-        doc.text('Voucher:', leftMargin, y);
-        doc.setFont(undefined, 'normal');
-        const voucherName = voucherData.name.length > 25 ? voucherData.name.substring(0, 25) + '...' : voucherData.name;
-        doc.text(voucherName, leftMargin + 30, y);
-
-        y += lineHeight;
-        doc.setFont(undefined, 'bold');
-        doc.text('Code:', leftMargin, y);
-        doc.setFont(undefined, 'normal');
-        doc.setFontSize(14);
-        doc.setTextColor(...primaryColor);
-        doc.text(voucherData.code, leftMargin + 30, y);
-
-        y += lineHeight + 2;
-        doc.setTextColor(...textColor);
-        doc.setFontSize(12);
-        doc.setFont(undefined, 'bold');
-        doc.text('Value:', leftMargin, y);
-        doc.setFont(undefined, 'normal');
-        doc.text(`${voucherData.price} Points`, leftMargin + 30, y);
-
-        y += lineHeight + 5;
-        doc.setFont(undefined, 'bold');
-        doc.text('Redeemed Date:', leftMargin, y);
-        doc.setFont(undefined, 'normal');
-        doc.text(voucherData.date, leftMargin + 40, y);
-
-        y += lineHeight;
-        doc.setFont(undefined, 'bold');
-        doc.text('Expires On:', leftMargin, y);
-        doc.setFont(undefined, 'normal');
-        doc.text(voucherData.expires, leftMargin + 40, y);
-
-        y += lineHeight;
-        doc.setFont(undefined, 'bold');
-        doc.text('User:', leftMargin, y);
-        doc.setFont(undefined, 'normal');
-        doc.text(voucherData.userName, leftMargin + 40, y);
-
-        // Divider
-        y += lineHeight + 5;
-        doc.setDrawColor(...lightGray);
-        doc.line(25, y, 185, y);
-
-        // Terms & Conditions
-        y += 10;
-        doc.setFontSize(11);
-        doc.setFont(undefined, 'bold');
-        doc.text('TERMS & CONDITIONS:', leftMargin, y);
-
-        y += 8;
-        doc.setFontSize(9);
-        doc.setFont(undefined, 'normal');
-        const terms = [
-          '• This voucher is valid until expiry date',
-          '• Cannot be exchanged for cash',
-          '• One-time use only',
-          '• Present this voucher at the time of purchase'
-        ];
-        terms.forEach(term => {
-          doc.text(term, leftMargin + 5, y);
-          y += 6;
+      // Generate QR code as Data URL
+      const qrUrl = await new Promise((resolve, reject) => {
+        if (typeof QRCode === 'undefined') {
+          console.error('QRCode library not loaded');
+          reject('QRCode not available');
+          return;
+        }
+        
+        QRCode.toDataURL(qrData, { width: 100, margin: 1 }, (err, url) => {
+          if (err) {
+            console.error("QR Code generation failed:", err);
+            reject(err);
+          } else {
+            resolve(url);
+          }
         });
+      });
 
-        // Add QR code image to bottom
-        doc.addImage(qrUrl, 'PNG', 85, 180, 40, 40);
+      // Load voucher image
+      const imgUrl = await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        
+        // Set a timeout for image loading
+        const timeout = setTimeout(() => {
+          console.warn('Image loading timeout, using placeholder');
+          reject('timeout');
+        }, 5000);
+        
+        img.onload = () => {
+          clearTimeout(timeout);
+          resolve(img);
+        };
+        
+        img.onerror = () => {
+          clearTimeout(timeout);
+          console.warn('Image failed to load, using placeholder');
+          reject('error');
+        };
+        
+        img.src = 'img/' + voucherData.img;
+      }).catch(() => null);
 
-        doc.setFontSize(10);
-        doc.setTextColor(...textColor);
-        doc.text('Scan QR Code', 105, 225, { align: 'center' });
+      // Draw voucher image if loaded
+      if (imgUrl) {
+        try {
+          doc.addImage(imgUrl, 'JPEG', 160, 55, 30, 30);
+        } catch (e) {
+          console.warn('Failed to add image to PDF:', e);
+          // Draw placeholder
+          doc.setDrawColor(...lightGray);
+          doc.rect(160, 55, 30, 30);
+          doc.setFontSize(8);
+          doc.setTextColor(...textColor);
+          doc.text('Image', 175, 72, { align: 'center' });
+        }
+      } else {
+        // Draw placeholder
+        doc.setDrawColor(...lightGray);
+        doc.rect(160, 55, 30, 30);
         doc.setFontSize(8);
-        doc.text('for verification', 105, 231, { align: 'center' });
+        doc.setTextColor(...textColor);
+        doc.text('Image', 175, 72, { align: 'center' });
+      }
 
-        // Footer
-        doc.setFillColor(...primaryColor);
-        doc.rect(0, 270, 210, 27, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(10);
-        doc.text('Thank you for choosing Optima Bank!', 105, 280, { align: 'center' });
-        doc.setFontSize(9);
-        doc.text('For support: support@optimabank.com', 105, 287, { align: 'center' });
+      // Text details
+      doc.setTextColor(...textColor);
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
 
-        // Save the final PDF
-        doc.save(`Optima_Bank_Voucher_${voucherData.code}.pdf`);
-      };
-    });
+      let y = 65;
+      const leftMargin = 25;
+      const lineHeight = 10;
 
-    return true;
-  } catch (error) {
-    console.error('PDF generation error:', error);
-    return false;
-  }
-},
+      doc.text('Voucher:', leftMargin, y);
+      doc.setFont(undefined, 'normal');
+      const voucherName = voucherData.name.length > 25 ? voucherData.name.substring(0, 25) + '...' : voucherData.name;
+      doc.text(voucherName, leftMargin + 30, y);
 
-  
-  generatePDFWithoutImage: function(doc, voucherData, primaryColor, textColor, lightGray) {
-    // Same PDF generation but without waiting for image
-    doc.setTextColor(...textColor);
-    doc.setFontSize(12);
-    doc.setFont(undefined, 'bold');
-    
-    let y = 65;
-    const leftMargin = 25;
-    const lineHeight = 10;
-    
-    // Placeholder for image
-    doc.setDrawColor(...lightGray);
-    doc.rect(160, 55, 30, 30);
-    doc.setFontSize(8);
-    doc.text('Image', 175, 72, { align: 'center' });
-    
-    doc.setFontSize(12);
-    doc.text('Voucher:', leftMargin, y);
-    doc.setFont(undefined, 'normal');
-    const voucherName = voucherData.name.length > 25 ? voucherData.name.substring(0, 25) + '...' : voucherData.name;
-    doc.text(voucherName, leftMargin + 30, y);
-    
-    y += lineHeight;
-    doc.setFont(undefined, 'bold');
-    doc.text('Code:', leftMargin, y);
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(14);
-    doc.setTextColor(...primaryColor);
-    doc.text(voucherData.code, leftMargin + 30, y);
-    
-    y += lineHeight + 2;
-    doc.setTextColor(...textColor);
-    doc.setFontSize(12);
-    doc.setFont(undefined, 'bold');
-    doc.text('Value:', leftMargin, y);
-    doc.setFont(undefined, 'normal');
-    doc.text(`${voucherData.price} Points`, leftMargin + 30, y);
-    
-    y += lineHeight + 5;
-    doc.setFont(undefined, 'bold');
-    doc.text('Redeemed Date:', leftMargin, y);
-    doc.setFont(undefined, 'normal');
-    doc.text(voucherData.date, leftMargin + 40, y);
-    
-    y += lineHeight;
-    doc.setFont(undefined, 'bold');
-    doc.text('Expires On:', leftMargin, y);
-    doc.setFont(undefined, 'normal');
-    doc.text(voucherData.expires, leftMargin + 40, y);
-    
-    y += lineHeight;
-    doc.setFont(undefined, 'bold');
-    doc.text('User:', leftMargin, y);
-    doc.setFont(undefined, 'normal');
-    doc.text(voucherData.userName, leftMargin + 40, y);
-    
-    y += lineHeight + 5;
-    doc.setDrawColor(...lightGray);
-    doc.line(25, y, 185, y);
-    
-    y += 10;
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'bold');
-    doc.text('TERMS & CONDITIONS:', leftMargin, y);
-    
-    y += 8;
-    doc.setFontSize(9);
-    doc.setFont(undefined, 'normal');
-    const terms = [
-      '• This voucher is valid until expiry date',
-      '• Cannot be exchanged for cash',
-      '• One-time use only',
-      '• Present this voucher at the time of purchase'
-    ];
-    
-    terms.forEach(term => {
-      doc.text(term, leftMargin + 5, y);
-      y += 6;
-    });
-    
-    // QR Code at bottom
-    doc.setDrawColor(...lightGray);
-    doc.rect(85, 185, 40, 40);
-    doc.setFontSize(10);
-    doc.setTextColor(...textColor);
-    doc.text('Scan QR Code', 105, 205, { align: 'center' });
-    doc.setFontSize(8);
-    doc.text('for verification', 105, 212, { align: 'center' });
-    
-    doc.setFillColor(...primaryColor);
-    doc.rect(0, 270, 210, 27, 'F');
-    
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(10);
-    doc.text('Thank you for choosing Optima Bank!', 105, 280, { align: 'center' });
-    doc.setFontSize(9);
-    doc.text('For support: support@optimabank.com', 105, 287, { align: 'center' });
-    
-    doc.save(`Optima_Bank_Voucher_${voucherData.code}.pdf`);
+      y += lineHeight;
+      doc.setFont(undefined, 'bold');
+      doc.text('Code:', leftMargin, y);
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(14);
+      doc.setTextColor(...primaryColor);
+      doc.text(voucherData.code, leftMargin + 30, y);
+
+      y += lineHeight + 2;
+      doc.setTextColor(...textColor);
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.text('Value:', leftMargin, y);
+      doc.setFont(undefined, 'normal');
+      doc.text(`${voucherData.price} Points`, leftMargin + 30, y);
+
+      y += lineHeight + 5;
+      doc.setFont(undefined, 'bold');
+      doc.text('Redeemed Date:', leftMargin, y);
+      doc.setFont(undefined, 'normal');
+      doc.text(voucherData.date, leftMargin + 40, y);
+
+      y += lineHeight;
+      doc.setFont(undefined, 'bold');
+      doc.text('Expires On:', leftMargin, y);
+      doc.setFont(undefined, 'normal');
+      doc.text(voucherData.expires, leftMargin + 40, y);
+
+      y += lineHeight;
+      doc.setFont(undefined, 'bold');
+      doc.text('User:', leftMargin, y);
+      doc.setFont(undefined, 'normal');
+      doc.text(voucherData.userName, leftMargin + 40, y);
+
+      // Divider
+      y += lineHeight + 5;
+      doc.setDrawColor(...lightGray);
+      doc.line(25, y, 185, y);
+
+      // Terms & Conditions
+      y += 10;
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'bold');
+      doc.text('TERMS & CONDITIONS:', leftMargin, y);
+
+      y += 8;
+      doc.setFontSize(9);
+      doc.setFont(undefined, 'normal');
+      const terms = [
+        '• This voucher is valid until expiry date',
+        '• Cannot be exchanged for cash',
+        '• One-time use only',
+        '• Present this voucher at the time of purchase'
+      ];
+      terms.forEach(term => {
+        doc.text(term, leftMargin + 5, y);
+        y += 6;
+      });
+
+      // Add QR code image to bottom
+      doc.addImage(qrUrl, 'PNG', 85, 180, 40, 40);
+
+      doc.setFontSize(10);
+      doc.setTextColor(...textColor);
+      doc.text('Scan QR Code', 105, 225, { align: 'center' });
+      doc.setFontSize(8);
+      doc.text('for verification', 105, 231, { align: 'center' });
+
+      // Footer
+      doc.setFillColor(...primaryColor);
+      doc.rect(0, 270, 210, 27, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(10);
+      doc.text('Thank you for choosing Optima Bank!', 105, 280, { align: 'center' });
+      doc.setFontSize(9);
+      doc.text('For support: support@optimabank.com', 105, 287, { align: 'center' });
+
+      // Save the final PDF
+      doc.save(`Optima_Bank_Voucher_${voucherData.code}.pdf`);
+
+      return true;
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      return false;
+    }
   }
 };
 
@@ -327,7 +271,7 @@ function addNotification(message, type = 'info', voucherCode = null) {
   
   notifications.unshift(notification);
   updateNotificationUI();
-  saveNotifications(); // Save to Firestore
+  saveNotifications();
 }
 
 function updateNotificationUI() {
@@ -373,12 +317,12 @@ function updateNotificationUI() {
         
         if (notif.downloaded || (voucherCode && downloadedVouchers.has(voucherCode))) {
           updateNotificationUI();
-          saveNotifications(); // Save after marking as read
+          saveNotifications();
           return;
         }
         
         updateNotificationUI();
-        saveNotifications(); // Save after marking as read
+        saveNotifications();
         
         if (notif.message.includes('Download your voucher') && lastRedeemedVoucher) {
           downloadVoucher(lastRedeemedVoucher);
@@ -387,7 +331,7 @@ function updateNotificationUI() {
             downloadedVouchers.add(voucherCode);
           }
           updateNotificationUI();
-          saveNotifications(); // Save after download
+          saveNotifications();
         }
       }
     });
@@ -399,20 +343,19 @@ notificationBtn.addEventListener('click', (e) => {
   notificationDropdown.classList.toggle('show');
   cartDropdown.classList.remove('show');
   
-  // Mark all as read when opening
   notifications.forEach(n => n.unread = false);
   updateNotificationUI();
-  saveNotifications(); // Save after marking all as read
+  saveNotifications();
 });
 
 clearAllBtn.addEventListener('click', () => {
   notifications = [];
   updateNotificationUI();
-  saveNotifications(); // Save after clearing all
+  saveNotifications();
 });
 
 /* ========== DOWNLOAD VOUCHER ========== */
-function downloadVoucher(voucherData) {
+async function downloadVoucher(voucherData) {
   if (!voucherData) return;
   
   if (downloadedVouchers.has(voucherData.code)) {
@@ -422,17 +365,30 @@ function downloadVoucher(voucherData) {
   
   voucherData.userName = nameEl.textContent;
   
-  if (window.VoucherPDFGenerator && typeof window.jspdf !== 'undefined') {
-    const success = window.VoucherPDFGenerator.generatePDF(voucherData);
-    if (success) {
-      downloadedVouchers.add(voucherData.code);
-      addNotification('Voucher downloaded successfully!', 'success');
-    } else {
-      downloadVoucherAsText(voucherData);
+  // Check if libraries are loaded
+  const jsPDFLoaded = typeof window.jspdf !== 'undefined';
+  const qrCodeLoaded = typeof QRCode !== 'undefined';
+  
+  console.log('jsPDF loaded:', jsPDFLoaded);
+  console.log('QRCode loaded:', qrCodeLoaded);
+  
+  if (jsPDFLoaded && qrCodeLoaded) {
+    try {
+      const success = await window.VoucherPDFGenerator.generatePDF(voucherData);
+      if (success) {
+        downloadedVouchers.add(voucherData.code);
+        addNotification('Voucher downloaded as PDF successfully!', 'success');
+        return;
+      }
+    } catch (error) {
+      console.error('PDF generation failed:', error);
     }
   } else {
-    downloadVoucherAsText(voucherData);
+    console.warn('Required libraries not loaded. jsPDF:', jsPDFLoaded, 'QRCode:', qrCodeLoaded);
   }
+  
+  // Fallback to text download
+  downloadVoucherAsText(voucherData);
 }
 
 function downloadVoucherAsText(voucherData) {
@@ -448,6 +404,12 @@ function downloadVoucherAsText(voucherData) {
 ║  Expires On: ${voucherData.expires.padEnd(37)}║
 ║  User: ${voucherData.userName.padEnd(44)}║
 ╚═══════════════════════════════════════════════════════╝
+
+Terms & Conditions:
+• This voucher is valid until expiry date
+• Cannot be exchanged for cash
+• One-time use only
+• Present this voucher at the time of purchase
   `.trim();
   
   const blob = new Blob([voucherContent], { type: 'text/plain' });
@@ -461,7 +423,7 @@ function downloadVoucherAsText(voucherData) {
   window.URL.revokeObjectURL(url);
   
   downloadedVouchers.add(voucherData.code);
-  addNotification('Voucher downloaded successfully!', 'success');
+  addNotification('Voucher downloaded as text file (PDF libraries not available)', 'warning');
 }
 
 /* ========== AUTH STATE ========== */
@@ -481,8 +443,6 @@ onAuthStateChanged(auth, async (user) => {
     balance = data.points || 0;
     updateBalanceUI();
     updateCartUI(data.cart || []);
-    
-    // Load notifications from Firestore
     loadNotifications();
   }
 });
@@ -690,9 +650,9 @@ cartBtn.addEventListener("click", (e) => {
 });
 
 /* ========== DOWNLOAD VOUCHER BUTTON ========== */
-document.getElementById("downloadVoucherBtn").addEventListener("click", () => {
+document.getElementById("downloadVoucherBtn").addEventListener("click", async () => {
   if (lastRedeemedVoucher && !downloadedVouchers.has(lastRedeemedVoucher.code)) {
-    downloadVoucher(lastRedeemedVoucher);
+    await downloadVoucher(lastRedeemedVoucher);
     const btn = document.getElementById("downloadVoucherBtn");
     btn.textContent = "Downloaded";
     btn.style.background = "#6c757d";
