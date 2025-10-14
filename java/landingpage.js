@@ -247,16 +247,16 @@ const skipAdBtn = document.getElementById("skipAdBtn");
 const skipTimer = document.getElementById("skipTimer");
 
 const adVideos = [
-  "video/IphoneAds.mp4",
-  "video/ClearManAds.mp4",
-  "video/CRAds.mp4",
-  "video/MiloAds.mp4",
-  "video/NikeAds.mp4",
-  "video/PanteenAds.mp4",
-  "video/PumaAds.mp4",
-  "video/shopeeAds.mp4",
-  "video/TrivagoAds.mp4",
-  "video/UniqloAds.mp4",
+  "IphoneAds.mp4",
+  "ClearManAds.mp4",
+  "CRAds.mp4",
+  "MiloAds.mp4",
+  "NikeAds.mp4",
+  "PanteenAds.mp4",
+  "PumaAds.mp4",
+  "shopeeAds.mp4",
+  "TrivagoAds.mp4",
+  "UniqloAds.mp4",
 ];
 
 let skipCountdown = 5;
@@ -719,4 +719,5 @@ setTimeout(() => {
       addMessage(`Welcome back, ${userName}! How can I assist you today?`, false);
     }
   }
+
 }, 2000);
